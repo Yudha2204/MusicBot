@@ -26,7 +26,7 @@ export class Play {
             });
         }
 
-        let filterQueue : Song[] = this.server.queue.filter((x : Song) => x.status === MusicStatus.Waiting);
+        let filterQueue: Song[] = this.server.queue.filter((x: Song) => x.status === MusicStatus.Unplayed);
 
         if (filterQueue.length > 0) {
             this.server.player = createAudioPlayer();
