@@ -1,16 +1,15 @@
 
 
-import { Client, Intents, Collection, Message } from "discord.js";
+import { Client, Intents, Message, MessageEmbed } from "discord.js";
 import dotenv from 'dotenv';
-import { MusicStatus, Video } from "./video.model";
-import { QueueList } from "./commands/queue-list";
-import { QueueAdd } from "./commands/queue-add";
-import { QueuePlay } from "./commands/queue-play";
-import { SearchMusic } from "./commands/search-music";
+import { MusicStatus, Song } from "./interface/song";
+import { Play } from "./commands/play";
+import { Server } from "./interface/server";
+import { Skip } from "./commands/skip";
 
+let prefix : string = '-'; 
 dotenv.config();
 
-let searchVideo : Video[] = [];
 
 const botClient = new Client({
     intents : [
@@ -20,73 +19,118 @@ const botClient = new Client({
     ]
 });
 
-const client : any = botClient;
-client.queue = [];
-client.channel = {};
-client.player = {};
+let searchVideo : Song[] = [];
+
+/**
+ * servers Contains a bunch of server list
+ * @example [GuildId = { queue : [], player : AudioPlayer, channel : VoiceConnection }]
+ */
+let servers = {};
 
 botClient.once('ready', () => {
     console.log('Bot Is Ready');
 });
 
 botClient.on('messageCreate', async (msg : Message) => {
-    if (!msg.content.startsWith('-')) return;
-    const args = msg?.content?.slice(1).split(/ +/);
+    if (!msg.content.startsWith(prefix)) return;
+
+    if (!servers[msg?.guildId ?? '']) {
+        servers[msg?.guildId ?? ''] = {
+            queue : [{name : '1 Detik', url : 'https://www.youtube.com/watch?v=DnQlhxV_ijY&ab_channel=AthallahHilalS', status : MusicStatus.Waiting}],
+            player : null,
+            channel : null,
+            status : 'active' 
+        }
+    }
+
+    let server : Server = servers[msg?.guildId ?? ''];
+
+    const args = msg?.content?.slice(prefix.length).split(/ +/);
     const command = args?.shift()?.toLowerCase();
+    
     switch (command) {
+        case 'info' : 
+            sendCommandInfo(msg);
+        break;
         case 'play' : 
-            await playCommand(msg, args);
+            let play = new Play(msg, server);
+            await play.execute();
         break;
         case 'skip' : 
-            let skip = Number(args[0]);
-            
+            let skip = new Skip(msg, server, Number(args[0]));
+            await skip.execute();
         break;
-        case 'search' : 
-            searchVideo = [];
-            let search = new SearchMusic(msg, args.join(' '), searchVideo);
-            searchVideo = await search.execute();
-        break;
-        case 'list' :
-            let list = new QueueList(msg, client.queue);
-            await list.execute();
-        break;
-        case 'add' : 
-                let newQueue = new QueueAdd(msg, args[0], client.queue, searchVideo)
-                await newQueue.execute();
-                searchVideo = [];
-        break;
-        case 'pause' :
-            client.player.pause();
-            client.channel.subscribe(client.player);
+        case 'pause' : 
+            if (!server.player) return;
+            server.player.pause();
+            server?.channel?.subscribe(server.player);
         break;
         case 'resume' : 
-            client.player.unpause();
-            client.channel.subscribe(client.player);
+            if (!server.player) return;
+            server.player.unpause();
+            server?.channel?.subscribe(server.player);
         break;
-        case 'reset' : 
-            client.queue.forEach((data : Video) => {
-                data.played = MusicStatus.Waiting
-            });
+        case 'reset' :
+            for (let i = 0; i < server.queue.length; i++) {
+                server.queue[i].status = MusicStatus.Waiting;
+            }
+            msg.channel.send('Queue Reset, Type -Play To Play Queue')
+        break;
+        case 'exit' : 
+            if (!servers[msg?.guildId ?? '']) return;
+            delete servers[msg?.guildId ?? ''];
+            console.log(servers);
         break;
     }
 })
 
-botClient.login(process.env.TOKEN);
+// let interVal = setInterval(() => {
+//     for (let i = 0; i < serverIds.length; i++) {
+//         if (servers[serverIds[i]].status == 'inactive') {
+//             delete servers[serverIds[i]];
+//         }
+//     }
+// }, 30000)
 
-async function playCommand(msg: Message, args: string[]) {
-    /**
-     * Commands
-     * Play URL : Add song to queue, then play it
-     * Play Number Of Song From SearchVideo, Add song
-     */
-    let newQueue = new QueueAdd(msg, args[0], client.queue, searchVideo);
-    const success = await newQueue.execute();
-    searchVideo = [];
-
-    if (success) {
-        let queuePlay = new QueuePlay(msg, client.queue);
-        const data = await queuePlay.execute();
-        client.channel = data?.channel;
-        client.player = data?.player;
-    }
+function sendCommandInfo(message : Message){
+    let pic = 'https://lh3.googleusercontent.com/ogw/ADea4I4RMxkL1oEULYQ_hq46GyYA-NK3y8pRkHoMtpqv=s83-c-mo';
+    message.channel.send({
+        embeds : [
+            new MessageEmbed() 
+            .setColor("#04eded")
+            .setTitle('Command Info')
+            .setThumbnail(pic)
+            .addFields(
+                {
+                    name : 'Info',
+                    value : 'Show All Command List'
+                },
+                {
+                    name : 'Play',
+                    value : 'Play A Music If There a Queue'
+                },
+                {
+                    name : 'Skip (Number)',
+                    value : 'Skip Queue To Next Song'
+                },
+                {
+                    name : 'Pause',
+                    value : 'Pause Current Music',
+                    inline : true
+                },
+                {
+                    name : 'Resume',
+                    value : 'Resume Current Music',
+                    inline : true
+                },
+                {
+                    name : 'Exit',
+                    value : 'Bot Will Leave Channel (Please Use This, If You No Longer Listen To A Music With This Bot)'
+                }
+            )
+            .setFooter('Prefix (-)', pic)
+        ]
+    })
 }
+
+botClient.login(process.env.TOKEN);
