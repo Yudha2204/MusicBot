@@ -1,23 +1,30 @@
 
 
-import { Client, Intents, Message, MessageEmbed } from "discord.js";
+import { Client, EmbedFieldData, Intents, Message, MessageEmbed, TextBasedChannels } from "discord.js";
 import dotenv from 'dotenv';
+
+import { initializeApp } from 'firebase/app';
+import {getDoc, getFirestore, getDocs, collection, doc, snapshotEqual} from 'firebase/firestore/lite'
+
 import { MusicStatus, Song } from "./interface/song";
 import { Play } from "./commands/play";
 import { Server } from "./interface/server";
 import { Skip } from "./commands/skip";
 import { Search } from "./commands/search";
 import { AddQueue } from "./commands/add";
+import { firebaseConfig } from "./config/firebase.config";
 
 let prefix : string = '-'; 
 dotenv.config();
 
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 const botClient = new Client({
     intents : [
         Intents.FLAGS.GUILDS,
         Intents.FLAGS.GUILD_MESSAGES,
-        Intents.FLAGS.GUILD_VOICE_STATES
+        Intents.FLAGS.GUILD_VOICE_STATES,
     ]
 });
 
@@ -109,12 +116,58 @@ botClient.on('messageCreate', async (msg : Message) => {
             msg.member?.send(`Your id is ${msg.member.id}`);
             break;
 
-        //Command For Check Server 
+        case 'playlist' : 
+            if (args[0] == 'play' && args[1]) {
+                await playPlaylist(server, msg.guildId, args[1]);
+                let play = new Play(msg, server);
+                await play.execute();
+            } else {
+                await getPlayList(msg.channel, msg.guildId);
+            }
+            break;
         case 'servers' : 
             sendToMember(msg);
             break;
     }
 })
+
+async function playPlaylist(server : Server, serverId : string | null, playlistName : string) {
+    const dbColection = collection(db, `ServerPlaylist/${serverId}/Playlist/${playlistName}/Song`);
+    const dbDocs = await getDocs(dbColection);
+    for (let i = 0; i < dbDocs.docs.length; i++) {
+        server.queue.push(
+            {
+                index : Number(dbDocs.docs[i].id), 
+                name : dbDocs.docs[i].data().name,
+                value : dbDocs.docs[i].data().value,
+                url : dbDocs.docs[i].data().url,
+                status : MusicStatus.Unplayed
+            })
+    }
+    server.queue.sort((a, b) =>  a.index - b.index);
+}
+
+async function getPlayList(channel : TextBasedChannels, serverId : string | null) {
+    channel.send('Please Wait Fetching Data :orange_circle:')
+    const dbColection = collection(db, `ServerPlaylist/${serverId}/Playlist`);
+    const dbDocs = await getDocs(dbColection);
+    const playlist  = dbDocs.docs.map(x => x.id);
+    const embedMessage : EmbedFieldData[] = []; 
+    
+    for (let i = 0; i < playlist.length; i++) {
+        const dbColection = collection(db, `ServerPlaylist/${serverId}/Playlist/${playlist[i]}/Song`);
+        const dbDocs = await getDocs(dbColection);
+        embedMessage.push({name : playlist[i], value : dbDocs.size + ' Song'});
+    }
+    
+    channel.send({
+        embeds : [
+            new MessageEmbed()
+            .setTitle('Playlist in this server')
+            .addFields(embedMessage)
+        ]
+    })
+}
 
 /**
  * This Interval Check If The Server Has AudioPlayer Or Not, If Not Then It Will Change Status Of That Server To Inactive
@@ -196,6 +249,10 @@ function sendCommandInfo(message : Message){
                 {
                     name : 'Info',
                     value : 'Show All Command List'
+                },
+                {
+                    name : 'Playlist',
+                    value : 'Show All Server Playlist'
                 },
                 {
                     name : 'Play | (Number / Url) (Optional)',
