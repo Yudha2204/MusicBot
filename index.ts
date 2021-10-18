@@ -4,7 +4,7 @@ import { Client, EmbedFieldData, Intents, Message, MessageEmbed, TextBasedChanne
 import dotenv from 'dotenv';
 
 import { initializeApp } from 'firebase/app';
-import {getDoc, getFirestore, getDocs, collection, doc, snapshotEqual} from 'firebase/firestore/lite'
+import { getDoc, getFirestore, getDocs, collection, doc, setDoc } from 'firebase/firestore/lite'
 
 import { MusicStatus, Song } from "./interface/song";
 import { Play } from "./commands/play";
@@ -48,7 +48,6 @@ botClient.on('messageCreate', async (msg : Message) => {
     }
 
     let server = servers.get(msg.guildId) as Server;
-
     const args = msg?.content?.slice(prefix.length).split(/ +/);
     const command = args?.shift()?.toLowerCase();
     switch (command) {
@@ -67,7 +66,7 @@ botClient.on('messageCreate', async (msg : Message) => {
 
         case 'skip' : 
             let skip = new Skip(msg, server);
-            await skip.execute();
+            await skip.execute(Number(args[0]));
             break;
 
         case 'pause' : 
@@ -118,24 +117,42 @@ botClient.on('messageCreate', async (msg : Message) => {
 
         case 'playlist' : 
             if (args[0] == 'play' && args[1]) {
-                await playPlaylist(server, msg.guildId, args[1]);
+                await playPlaylist(server.queue, msg.guildId, args[1]);
                 let play = new Play(msg, server);
                 await play.execute();
             } else {
                 await getPlayList(msg.channel, msg.guildId);
             }
             break;
+
+        case 'save':
+            if (args[0] === 'playlist' && args[1]) {
+                await saveQueue(server.queue, msg.guildId, args[1]);
+            }
+            break;
+
         case 'servers' : 
             sendToMember(msg);
             break;
     }
+    server.timeStamp = new Date();
 })
 
-async function playPlaylist(server : Server, serverId : string | null, playlistName : string) {
+async function saveQueue(queue: Song[], serverId: string | null, playlistName: string) {
+    for (let i = 0; i < queue.length; i++) {
+        const dbColection = collection(db, `ServerPlaylist/${serverId}/Playlist/${playlistName}/Song`);
+        const dbDocs = await getDocs(dbColection);
+        await setDoc(doc(dbColection, dbDocs.size.toString()), {
+            name: queue[i].name, url: queue[i].url, value: queue[i].value
+        });
+    }
+}
+
+async function playPlaylist(queue: Song[], serverId: string | null, playlistName: string) {
     const dbColection = collection(db, `ServerPlaylist/${serverId}/Playlist/${playlistName}/Song`);
     const dbDocs = await getDocs(dbColection);
     for (let i = 0; i < dbDocs.docs.length; i++) {
-        server.queue.push(
+        queue.push(
             {
                 index : Number(dbDocs.docs[i].id), 
                 name : dbDocs.docs[i].data().name,
@@ -144,29 +161,33 @@ async function playPlaylist(server : Server, serverId : string | null, playlistN
                 status : MusicStatus.Unplayed
             })
     }
-    server.queue.sort((a, b) =>  a.index - b.index);
+    queue.sort((a, b) => a.index - b.index);
 }
 
 async function getPlayList(channel : TextBasedChannels, serverId : string | null) {
-    channel.send('Please Wait Fetching Data :orange_circle:')
-    const dbColection = collection(db, `ServerPlaylist/${serverId}/Playlist`);
-    const dbDocs = await getDocs(dbColection);
-    const playlist  = dbDocs.docs.map(x => x.id);
-    const embedMessage : EmbedFieldData[] = []; 
-    
-    for (let i = 0; i < playlist.length; i++) {
-        const dbColection = collection(db, `ServerPlaylist/${serverId}/Playlist/${playlist[i]}/Song`);
+    try {
+        channel.send('Please Wait Fetching Data :orange_circle:')
+        const dbColection = collection(db, `ServerPlaylist/${serverId}/Playlist`);
         const dbDocs = await getDocs(dbColection);
-        embedMessage.push({name : playlist[i], value : dbDocs.size + ' Song'});
+        const playlist = dbDocs.docs.map(x => x.id);
+        const embedMessage: EmbedFieldData[] = [];
+
+        for (let i = 0; i < playlist.length; i++) {
+            const dbColection = collection(db, `ServerPlaylist/${serverId}/Playlist/${playlist[i]}/Song`);
+            const dbDocs = await getDocs(dbColection);
+            embedMessage.push({ name: `${i}. ${playlist[i]}`, value: dbDocs.size + ' Song' });
+        }
+
+        channel.send({
+            embeds: [
+                new MessageEmbed()
+                    .setTitle('Playlist in this server')
+                    .addFields(embedMessage)
+            ]
+        })
+    } catch (err) {
+        console.log('Error When Get A Playlist', err);
     }
-    
-    channel.send({
-        embeds : [
-            new MessageEmbed()
-            .setTitle('Playlist in this server')
-            .addFields(embedMessage)
-        ]
-    })
 }
 
 /**
@@ -175,13 +196,10 @@ async function getPlayList(channel : TextBasedChannels, serverId : string | null
  */
 setInterval(() => {
     servers.forEach((value, key) => {
-        if (value.status === 'inactive') {
+        if ((new Date().getTime() - value.timeStamp.getTime() >= 300000)) {
             value.player?.stop();
             value.channel?.destroy(true);
             servers.delete(key);
-        }
-        if (!value.player) {
-            value.status = 'inactive'; 
         }
     })
 }, 120000)

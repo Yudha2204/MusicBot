@@ -7,6 +7,7 @@ export class Server {
     player : AudioPlayer | null = null;
     status : 'active' | 'inactive' = 'active';
     serverName : string | undefined; 
+    timeStamp: Date = new Date();
 
     constructor (name? : string) {
         this.serverName = name;
