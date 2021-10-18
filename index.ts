@@ -37,14 +37,13 @@ botClient.on('messageCreate', async (msg : Message) => {
     if (!msg.content.startsWith(prefix)) return;
 
     if (!servers.has(msg.guildId)) {
-        servers.set(msg.guildId, new Server())
+        servers.set(msg.guildId, new Server(msg.guild?.name))
     }
 
     let server = servers.get(msg.guildId) as Server;
 
     const args = msg?.content?.slice(prefix.length).split(/ +/);
     const command = args?.shift()?.toLowerCase();
-    
     switch (command) {
         case 'info' : 
             sendCommandInfo(msg);
@@ -100,18 +99,27 @@ botClient.on('messageCreate', async (msg : Message) => {
             break;
 
         case 'exit':
+            msg.channel.send('Thanks, I will take a rest :love_letter:')
             server.player?.stop();
             server.channel?.destroy(true);
             servers.delete(msg.guildId);
             break;
 
+        case 'myid' :
+            msg.member?.send(`Your id is ${msg.member.id}`);
+            break;
+
         //Command For Check Server 
         case 'servers' : 
-            console.log(servers);
+            sendToMember(msg);
             break;
     }
 })
 
+/**
+ * This Interval Check If The Server Has AudioPlayer Or Not, If Not Then It Will Change Status Of That Server To Inactive
+ * And If The Status Already Inactive It Will Delete The Server To Prevent Memory Leak
+ */
 setInterval(() => {
     servers.forEach((value, key) => {
         if (value.status === 'inactive') {
@@ -119,8 +127,24 @@ setInterval(() => {
             value.channel?.destroy(true);
             servers.delete(key);
         }
+        if (!value.player) {
+            value.status = 'inactive'; 
+        }
     })
-}, 60000)
+}, 120000)
+
+function sendToMember(msg: Message) {
+    msg.member?.send({
+        embeds: [
+            new MessageEmbed()
+                .setTitle('Server That Using This Bot')
+                .addFields(
+                    { name: 'Servers Active', value: servers.size.toString() }
+                )
+                .setTimestamp(new Date())
+        ]
+    });
+}
 
 function sendQueueList(message: Message, queue: Song[]) {
     if (queue.length > 0) {
@@ -210,8 +234,7 @@ function sendCommandInfo(message : Message){
                     value : 'Please Use This, If You No Longer Listen To A Music With This Bot'
                 }
             )
-            .setFooter('Prefix (-)', pic)
-            .setFooter('Thanks For Using This Bot')
+            .setFooter('Prefix (-) Thanks For Using This Bot', pic)
         ]
     })
 }

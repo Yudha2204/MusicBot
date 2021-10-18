@@ -15,7 +15,8 @@ export class AddQueue {
         if (!u) {
             this.message.channel.send('Please Add Second Argument');
         } else if (Number(u)) {
-            this.queue.push(...songs.filter(x => x.index === Number(u)))
+            this.queue.push(...songs.filter(x => x.index === Number(u)));
+            this.message.channel.send('New Queue Added');
         } else {
             let type = await playDl.validate(u);
             if (type) {
@@ -26,7 +27,8 @@ export class AddQueue {
                     value: info.video_details.channel?.name ?? '',
                     url: u,
                     status: MusicStatus.Unplayed
-                })
+                });
+            this.message.channel.send('New Queue Added');
             } else {
                 this.message.channel.send('Link Not Valid, Link Supported (Youtube, Spotify, and SoundCloud)');
             }
