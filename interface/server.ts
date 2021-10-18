@@ -1,9 +1,9 @@
 import { AudioPlayer, VoiceConnection } from "@discordjs/voice";
 import { Song } from "./song";
 
-export interface Server {
-    queue : Song[],
-    channel : VoiceConnection | null,
-    player : AudioPlayer | null
-    status : 'active' | 'inactive'
+export class Server {
+    queue : Song[] = [];
+    channel : VoiceConnection | null = null
+    player : AudioPlayer | null = null
+    status : 'active' | 'inactive' = 'active'
 }

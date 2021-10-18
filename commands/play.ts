@@ -25,10 +25,11 @@ export class Play {
                 adapterCreator : adapter as DiscordGatewayAdapterCreator
             });
         }
-
+        
         let filterQueue: Song[] = this.server.queue.filter((x: Song) => x.status === MusicStatus.Unplayed);
-
+        
         if (filterQueue.length > 0) {
+            this.server.status = 'active';
             this.server.player = createAudioPlayer();
             const song = await playDl.stream(filterQueue[0].url);
             const audioResource = createAudioResource(song.stream, {
@@ -44,14 +45,8 @@ export class Play {
             })
             this.message.channel.send(`Now Playing ${filterQueue[0].name} :musical_note:`);
         } else {
-            this.message.channel.send(`Queue Is Empty, I Will Leave Voice Channel, Good By :hand_splayed:`);
-            if (this.server.player !== null) {
-                this.server.player?.stop();
-                this.server.channel?.destroy(true);
-                this.server.player = null;
-                this.server.channel = null;
-                this.server.status = 'inactive';
-            }
+            this.message.channel.send(`Queue Is Empty, I Will Leave Voice Channel If Theres No Activity, :hand_splayed:`);
+            this.server.status = 'inactive';
         }   
     }
 

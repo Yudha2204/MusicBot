@@ -25,9 +25,9 @@ let searchSong: Song[] = [];
 
 /**
  * servers Contains a bunch of server list
- * @example [GuildId = { queue : [], player : AudioPlayer, channel : VoiceConnection }]
+ * @example [string = { queue : [], player : AudioPlayer, channel : VoiceConnection }]
  */
-let servers = {};
+let servers = new Map<string | null, Server>();
 
 botClient.once('ready', () => {
     console.log('Bot Is Ready');
@@ -36,16 +36,11 @@ botClient.once('ready', () => {
 botClient.on('messageCreate', async (msg : Message) => {
     if (!msg.content.startsWith(prefix)) return;
 
-    if (!servers[msg?.guildId ?? '']) {
-        servers[msg?.guildId ?? ''] = {
-            queue: [],
-            player : null,
-            channel : null,
-            status : 'active' 
-        }
+    if (!servers.has(msg.guildId)) {
+        servers.set(msg.guildId, new Server())
     }
 
-    let server : Server = servers[msg?.guildId ?? ''];
+    let server = servers.get(msg.guildId) as Server;
 
     const args = msg?.content?.slice(prefix.length).split(/ +/);
     const command = args?.shift()?.toLowerCase();
@@ -56,6 +51,10 @@ botClient.on('messageCreate', async (msg : Message) => {
             break;
 
         case 'play' : 
+            if (args[0]) {
+                let add = new AddQueue(msg, server.queue);
+                await add.execute(searchSong, args[0])
+            } 
             let play = new Play(msg, server);
             await play.execute();
             break;
@@ -101,21 +100,27 @@ botClient.on('messageCreate', async (msg : Message) => {
             break;
 
         case 'exit':
-            if (!servers[msg?.guildId ?? '']) return;
-            servers[msg?.guildId ?? ''].player.stop();
-            servers[msg?.guildId ?? ''].channel.destroy(true);
-            delete servers[msg?.guildId ?? ''];
+            server.player?.stop();
+            server.channel?.destroy(true);
+            servers.delete(msg.guildId);
+            break;
+
+        //Command For Check Server 
+        case 'servers' : 
+            console.log(servers);
             break;
     }
 })
 
-// let interVal = setInterval(() => {
-//     for (let i = 0; i < serverIds.length; i++) {
-//         if (servers[serverIds[i]].status == 'inactive') {
-//             delete servers[serverIds[i]];
-//         }
-//     }
-// }, 30000)
+setInterval(() => {
+    servers.forEach((value, key) => {
+        if (value.status === 'inactive') {
+            value.player?.stop();
+            value.channel?.destroy(true);
+            servers.delete(key);
+        }
+    })
+}, 60000)
 
 function sendQueueList(message: Message, queue: Song[]) {
     if (queue.length > 0) {
@@ -123,7 +128,7 @@ function sendQueueList(message: Message, queue: Song[]) {
             embeds: [
                 new MessageEmbed()
                     .setColor('#fffff')
-                    .setTitle('Queue List')
+                    .setTitle('All Status Queue List')
                     .addFields(...queue)
             ]
         });
@@ -133,18 +138,18 @@ function sendQueueList(message: Message, queue: Song[]) {
 }
 
 function sendQueueListFilter(message: Message, queue: Song[]) {
-    if (queue.length > 0) {
-        let filter = queue.filter(x => x.status === MusicStatus.Unplayed)
+    let filter = queue.filter(x => x.status === MusicStatus.Unplayed)
+    if (filter.length > 0) {
         message.channel.send({
             embeds: [
                 new MessageEmbed()
                     .setColor('#fffff')
-                    .setTitle('Queue List')
+                    .setTitle('Unplayed Queue List')
                     .addFields(...filter)
             ]
         });
     } else {
-        message.channel.send('Queue Is Empty');
+        message.channel.send('There No Unplayed Song, Type -Reset Then -Play To Repeat Queue');
     }
 }
 
@@ -169,8 +174,8 @@ function sendCommandInfo(message : Message){
                     value : 'Show All Command List'
                 },
                 {
-                    name : 'Play',
-                    value : 'Play A Music If There a Queue'
+                    name : 'Play | (Number / Url) (Optional)',
+                    value : 'Play A Music If There a Queue, Or Add Song Then Play It'
                 },
                 {
                     name : 'Skip (Number)',
@@ -202,10 +207,11 @@ function sendCommandInfo(message : Message){
                 },
                 {
                     name : 'Exit',
-                    value : 'Bot Will Leave Channel (Please Use This, If You No Longer Listen To A Music With This Bot)'
+                    value : 'Please Use This, If You No Longer Listen To A Music With This Bot'
                 }
             )
             .setFooter('Prefix (-)', pic)
+            .setFooter('Thanks For Using This Bot')
         ]
     })
 }
