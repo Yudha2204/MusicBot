@@ -15,7 +15,11 @@ export class AddQueue {
         if (!u) {
             this.message.channel.send('Please Add Second Argument');
         } else if (Number(u)) {
-            this.queue.push(...songs.filter(x => x.index === Number(u)));
+            let song = songs.filter(x => x.index === Number(u)).map(x => {
+                x.name = `${x.index}. ${x.name.slice(3)}`;
+                return x;
+            })
+            this.queue.push(...song);
             this.message.channel.send('New Queue Added');
         } else {
             let type = await playDl.validate(u);

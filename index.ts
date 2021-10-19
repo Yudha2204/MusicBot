@@ -42,17 +42,21 @@ botClient.once('ready', () => {
 
 botClient.on('messageCreate', async (msg : Message) => {
     if (!msg.content.startsWith(prefix)) return;
-
+    
     if (!servers.has(msg.guildId)) {
         servers.set(msg.guildId, new Server(msg.guild?.name))
     }
-
+    
     let server = servers.get(msg.guildId) as Server;
+    
     const args = msg?.content?.slice(prefix.length).split(/ +/);
     const command = args?.shift()?.toLowerCase();
+
+    //Update server timeStamp, to make sure this
+    server.timeStamp = new Date();
     switch (command) {
         case 'info' : 
-            sendCommandInfo(msg);
+        sendCommandInfo(msg);
             break;
 
         case 'play' : 
@@ -128,6 +132,8 @@ botClient.on('messageCreate', async (msg : Message) => {
         case 'save':
             if (args[0] === 'playlist' && args[1]) {
                 await saveQueue(server.queue, msg.guildId, args[1]);
+            } else {
+                msg.channel.send('Command Not Valid, To Save This Queue Type -save playlist playlistName');
             }
             break;
 
@@ -135,7 +141,6 @@ botClient.on('messageCreate', async (msg : Message) => {
             sendToMember(msg);
             break;
     }
-    server.timeStamp = new Date();
 })
 
 async function saveQueue(queue: Song[], serverId: string | null, playlistName: string) {
@@ -196,10 +201,13 @@ async function getPlayList(channel : TextBasedChannels, serverId : string | null
  */
 setInterval(() => {
     servers.forEach((value, key) => {
-        if ((new Date().getTime() - value.timeStamp.getTime() >= 300000)) {
+        if (value.status === 'inactive') {
             value.player?.stop();
             value.channel?.destroy(true);
             servers.delete(key);
+        }
+        if ((new Date().getTime() - value.timeStamp.getTime() >= 150000)) {
+            value.status = 'inactive';
         }
     })
 }, 120000)
