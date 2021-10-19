@@ -11,9 +11,9 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 export class Playlist {
-    message : Message
-    server : Server;
-    args : string[];
+    private message : Message
+    private server : Server;
+    private args : string[];
 
     constructor (message : Message, server : Server, args : string[]) {
         this.message = message;
