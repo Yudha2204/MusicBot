@@ -127,12 +127,7 @@ botClient.on('messageCreate', async (msg : Message) => {
  */
  setInterval(() => {
     servers.forEach((value, key) => {
-        if (value.status === 'inactive') {
-            value.player?.stop();
-            value.channel?.destroy(true);
-            servers.delete(key);
-        }
-        if ((new Date().getTime() - value.timeStamp.getTime() >= 150000)) {
+        if ((new Date().getTime() - value.timeStamp.getTime() >= 150000 && value.status === 'inactive')) {
             value.status = 'inactive';
         }
     })
