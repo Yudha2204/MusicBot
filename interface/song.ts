@@ -1,13 +1,14 @@
-export interface Video{
+export interface Song{
     index : number;
     name : string;
     value : string;
     url : string;
-    played : MusicStatus;
+    status : MusicStatus;
 }
 
 export enum MusicStatus {
     Playing = 'Now Playing',
+    Skipped = 'Skipped',
     Done = 'Sudah Diputar',
-    Waiting = 'Waiting'
+    Unplayed = 'Unplayed'
 }
