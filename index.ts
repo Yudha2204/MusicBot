@@ -131,7 +131,9 @@ botClient.on('messageCreate', async (msg : Message) => {
 
         case 'save':
             if (args[0] === 'playlist' && args[1]) {
+                msg.channel.send('Saving Playlist, Please Wait :orange_circle:');
                 await saveQueue(server.queue, msg.guildId, args[1]);
+                msg.channel.send(`Success Add Into Playlist :green_circle:`);
             } else {
                 msg.channel.send('Command Not Valid, To Save This Queue Type -save playlist playlistName');
             }
@@ -145,9 +147,13 @@ botClient.on('messageCreate', async (msg : Message) => {
 
 async function saveQueue(queue: Song[], serverId: string | null, playlistName: string) {
     for (let i = 0; i < queue.length; i++) {
-        const dbColection = collection(db, `ServerPlaylist/${serverId}/Playlist/${playlistName}/Song`);
-        const dbDocs = await getDocs(dbColection);
-        await setDoc(doc(dbColection, dbDocs.size.toString()), {
+        const headCollection = collection(db, `ServerPlaylist`);
+        await setDoc(doc(headCollection, serverId ?? ''), {});
+        const subCollection = collection(db, `ServerPlaylist/${serverId}/Playlist`);
+        await setDoc(doc(subCollection, playlistName), {});
+        const songCollection = collection(db, `ServerPlaylist/${serverId}/Playlist/${playlistName}/Song`);
+        const dbDocs = await getDocs(songCollection);
+        await setDoc(doc(songCollection, dbDocs.size.toString()), {
             name: queue[i].name, url: queue[i].url, value: queue[i].value
         });
     }
@@ -171,7 +177,7 @@ async function playPlaylist(queue: Song[], serverId: string | null, playlistName
 
 async function getPlayList(channel : TextBasedChannels, serverId : string | null) {
     try {
-        channel.send('Please Wait Fetching Data :orange_circle:')
+        channel.send('Please Wait Fetching Data :orange_circle:');
         const dbColection = collection(db, `ServerPlaylist/${serverId}/Playlist`);
         const dbDocs = await getDocs(dbColection);
         const playlist = dbDocs.docs.map(x => x.id);
