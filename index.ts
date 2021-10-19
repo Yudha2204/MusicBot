@@ -34,7 +34,7 @@ let searchSong: Song[] = [];
  * servers Contains a bunch of server list
  * @example [string = { queue : [], player : AudioPlayer, channel : VoiceConnection }]
  */
-let servers = new Map<string | null, Server>();
+const servers = new Map<string | null, Server>();
 
 botClient.once('ready', () => {
     console.log('Bot Is Ready');
@@ -52,7 +52,7 @@ botClient.on('messageCreate', async (msg : Message) => {
     const args = msg?.content?.slice(prefix.length).split(/ +/);
     const command = args?.shift()?.toLowerCase();
 
-    //Update server timeStamp, to make sure this
+    //Update server timeStamp, to make sure this server still active or not
     server.timeStamp = new Date();
     switch (command) {
         case 'info' : 
@@ -145,6 +145,7 @@ botClient.on('messageCreate', async (msg : Message) => {
     }
 })
 
+//#region Playlist
 async function saveQueue(queue: Song[], serverId: string | null, playlistName: string) {
     for (let i = 0; i < queue.length; i++) {
         const headCollection = collection(db, `ServerPlaylist`);
@@ -201,36 +202,9 @@ async function getPlayList(channel : TextBasedChannels, serverId : string | null
     }
 }
 
-/**
- * This Interval Check If The Server Has AudioPlayer Or Not, If Not Then It Will Change Status Of That Server To Inactive
- * And If The Status Already Inactive It Will Delete The Server To Prevent Memory Leak
- */
-setInterval(() => {
-    servers.forEach((value, key) => {
-        if (value.status === 'inactive') {
-            value.player?.stop();
-            value.channel?.destroy(true);
-            servers.delete(key);
-        }
-        if ((new Date().getTime() - value.timeStamp.getTime() >= 150000)) {
-            value.status = 'inactive';
-        }
-    })
-}, 120000)
+//#endregion
 
-function sendToMember(msg: Message) {
-    msg.member?.send({
-        embeds: [
-            new MessageEmbed()
-                .setTitle('Server That Using This Bot')
-                .addFields(
-                    { name: 'Servers Active', value: servers.size.toString() }
-                )
-                .setTimestamp(new Date())
-        ]
-    });
-}
-
+//#region QueueList
 function sendQueueList(message: Message, queue: Song[]) {
     if (queue.length > 0) {
         message.channel.send({
@@ -268,7 +242,9 @@ function resetQueue(server: Server, msg: Message) {
     }
     msg.channel.send('Queue Reset, Type -Play To Play Queue');
 }
+//#endregion
 
+//#region Information
 function sendCommandInfo(message : Message){
     let pic = 'https://lh3.googleusercontent.com/ogw/ADea4I4RMxkL1oEULYQ_hq46GyYA-NK3y8pRkHoMtpqv=s83-c-mo';
     message.channel.send({
@@ -321,11 +297,43 @@ function sendCommandInfo(message : Message){
                 {
                     name : 'Exit',
                     value : 'Please Use This, If You No Longer Listen To A Music With This Bot'
-                }
-            )
+                })
             .setFooter('Prefix (-) Thanks For Using This Bot', pic)
         ]
     })
 }
+
+
+function sendToMember(msg: Message) {
+    msg.member?.send({
+        embeds: [
+            new MessageEmbed()
+                .setTitle('Server That Using This Bot')
+                .addFields(
+                    { name: 'Servers Active', value: servers.size.toString() }
+                )
+                .setTimestamp(new Date())
+        ]
+    });
+}
+//#endregion
+
+
+/**
+ * This Interval Check If The Server Has AudioPlayer Or Not, If Not Then It Will Change Status Of That Server To Inactive
+ * And If The Status Already Inactive It Will Delete The Server To Prevent Memory Leak
+ */
+ setInterval(() => {
+    servers.forEach((value, key) => {
+        if (value.status === 'inactive') {
+            value.player?.stop();
+            value.channel?.destroy(true);
+            servers.delete(key);
+        }
+        if ((new Date().getTime() - value.timeStamp.getTime() >= 150000)) {
+            value.status = 'inactive';
+        }
+    })
+}, 120000)
 
 botClient.login(process.env.TOKEN);
