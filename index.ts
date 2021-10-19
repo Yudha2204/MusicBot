@@ -101,7 +101,9 @@ botClient.on('messageCreate', async (msg : Message) => {
             break;
 
         case 'list':
-            sendQueueList(msg, server.queue);
+            if (args[0]) {
+                await showPlaylistSong(msg.channel, msg.guildId, args[0]);
+            }
             break;
 
         case 'queue':
@@ -121,6 +123,7 @@ botClient.on('messageCreate', async (msg : Message) => {
 
         case 'playlist' : 
             if (args[0] == 'play' && args[1]) {
+                server.queue = [];
                 await playPlaylist(server.queue, msg.guildId, args[1]);
                 let play = new Play(msg, server);
                 await play.execute();
@@ -147,33 +150,41 @@ botClient.on('messageCreate', async (msg : Message) => {
 
 //#region Playlist
 async function saveQueue(queue: Song[], serverId: string | null, playlistName: string) {
-    for (let i = 0; i < queue.length; i++) {
+    try {
         const headCollection = collection(db, `ServerPlaylist`);
         await setDoc(doc(headCollection, serverId ?? ''), {});
         const subCollection = collection(db, `ServerPlaylist/${serverId}/Playlist`);
         await setDoc(doc(subCollection, playlistName), {});
         const songCollection = collection(db, `ServerPlaylist/${serverId}/Playlist/${playlistName}/Song`);
-        const dbDocs = await getDocs(songCollection);
-        await setDoc(doc(songCollection, dbDocs.size.toString()), {
-            name: queue[i].name, url: queue[i].url, value: queue[i].value
-        });
+        for (let i = 0; i < queue.length; i++) {
+            const dbDocs = await getDocs(songCollection);
+            await setDoc(doc(songCollection, dbDocs.size.toString()), {
+                name: queue[i].name, url: queue[i].url, value: queue[i].value
+            });
+        }
+    } catch (err) {
+        console.log(err);
     }
 }
 
 async function playPlaylist(queue: Song[], serverId: string | null, playlistName: string) {
-    const dbColection = collection(db, `ServerPlaylist/${serverId}/Playlist/${playlistName}/Song`);
-    const dbDocs = await getDocs(dbColection);
-    for (let i = 0; i < dbDocs.docs.length; i++) {
-        queue.push(
-            {
-                index : Number(dbDocs.docs[i].id), 
-                name : dbDocs.docs[i].data().name,
-                value : dbDocs.docs[i].data().value,
-                url : dbDocs.docs[i].data().url,
-                status : MusicStatus.Unplayed
-            })
+    try {
+        const dbColection = collection(db, `ServerPlaylist/${serverId}/Playlist/${playlistName}/Song`);
+        const dbDocs = await getDocs(dbColection);
+        for (let i = 0; i < dbDocs.docs.length; i++) {
+            queue.push(
+                {
+                    index : Number(dbDocs.docs[i].id), 
+                    name : dbDocs.docs[i].data().name,
+                    value : dbDocs.docs[i].data().value,
+                    url : dbDocs.docs[i].data().url,
+                    status : MusicStatus.Unplayed
+                })
+        }
+        queue = queue.sort((a, b) => a.index - b.index);
+    } catch (err) {
+        console.log(err);
     }
-    queue.sort((a, b) => a.index - b.index);
 }
 
 async function getPlayList(channel : TextBasedChannels, serverId : string | null) {
@@ -187,7 +198,7 @@ async function getPlayList(channel : TextBasedChannels, serverId : string | null
         for (let i = 0; i < playlist.length; i++) {
             const dbColection = collection(db, `ServerPlaylist/${serverId}/Playlist/${playlist[i]}/Song`);
             const dbDocs = await getDocs(dbColection);
-            embedMessage.push({ name: `${i}. ${playlist[i]}`, value: dbDocs.size + ' Song' });
+            embedMessage.push({ name: `${i+1}. ${playlist[i]}`, value: dbDocs.size + ' Song' });
         }
 
         channel.send({
@@ -202,26 +213,37 @@ async function getPlayList(channel : TextBasedChannels, serverId : string | null
     }
 }
 
-//#endregion
-
-//#region QueueList
-function sendQueueList(message: Message, queue: Song[]) {
-    if (queue.length > 0) {
-        message.channel.send({
-            embeds: [
+async function showPlaylistSong(channel : TextBasedChannels, serverId : string | null, playlistName : string) {
+    try {
+        const dbColection = collection(db, `ServerPlaylist/${serverId}/Playlist/${playlistName}/Song`);
+        const dbDoc = await getDocs(dbColection);
+        const embedMessage: EmbedFieldData[] = [];
+        const docs = dbDoc.docs.sort((a, b) => Number(a.id) - Number(b.id));
+        for (let i = 0; i < docs.length; i++) {
+            embedMessage.push(
+                { name : docs[i].id + '. ' + docs[i].data().name, value : docs[i].data().value }
+            )
+        }
+        channel.send({
+            embeds : [ 
                 new MessageEmbed()
-                    .setColor('#fffff')
-                    .setTitle('All Status Queue List')
-                    .addFields(...queue)
+                .setTitle('Playlist ' + playlistName)
+                .addFields(...embedMessage)
             ]
-        });
-    } else {
-        message.channel.send('Queue Is Empty');
+        })
+    } catch (err) {
+        console.log(err);
     }
 }
 
+//#endregion
+
+//#region QueueList
 function sendQueueListFilter(message: Message, queue: Song[]) {
-    let filter = queue.filter(x => x.status === MusicStatus.Unplayed)
+    let filter = queue.map(x => {
+        x.value + ` ${x.status}`
+        return x;
+    })
     if (filter.length > 0) {
         message.channel.send({
             embeds: [
