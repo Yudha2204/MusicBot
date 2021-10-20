@@ -26,6 +26,10 @@ export function sendCommandInfo(message : Message){
                     value : 'Play Song From Playlist'
                 },
                 {
+                    name: 'Playlist Add (Song Url | Number) PlaylistName',
+                    value: 'Add New Song Into Your Playlist'
+                },
+                {
                     name : 'Playlist Save PlaylistName',
                     value : 'Save Queue To Server Playlist'
                 },

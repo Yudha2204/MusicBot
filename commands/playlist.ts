@@ -1,6 +1,8 @@
-import { MusicStatus } from "../interface/song";
-import { getDoc, getFirestore, getDocs, collection, doc, setDoc } from 'firebase/firestore/lite'
+import { MusicStatus, Song } from "../interface/song";
+import { getFirestore, getDocs, collection, doc, setDoc } from 'firebase/firestore/lite'
 import { initializeApp } from 'firebase/app';
+
+import * as playDl from 'play-dl';
 
 import { firebaseConfig } from "../config/firebase.config";
 import { Play } from "./play";
@@ -14,11 +16,13 @@ export class Playlist {
     private message : Message
     private server : Server;
     private args : string[];
+    private searchSong: Song[];
 
-    constructor (message : Message, server : Server, args : string[]) {
+    constructor(message: Message, server: Server, args: string[], searchSong: Song[]) {
         this.message = message;
         this.server = server;
         this.args = args;
+        this.searchSong = searchSong;
     }
 
     async execute(){
@@ -26,6 +30,8 @@ export class Playlist {
             await this.play();
         } else if (this.args[0] === 'save' && this.args[1]){
             await this.savePlaylist();
+        } else if (this.args[0] === 'add' && this.args[1] && this.args[2]) {
+            await this.addToPlaylist();
         } else if (this.args[0]){
             await this.showPlaylistSong();
         } else {
@@ -66,7 +72,7 @@ export class Playlist {
             const songCollection = collection(db, `ServerPlaylist/${this.message.guildId as string}/Playlist/${this.args[1]}/Song`);
             for (let i = 0; i < this.server.queue.length; i++) {
                 const dbDocs = await getDocs(songCollection);
-                await setDoc(doc(songCollection, dbDocs.size.toString()), {
+                await setDoc(doc(songCollection, (dbDocs.size + 1).toString()), {
                     name: this.server.queue[i].name, url: this.server.queue[i].url, value: this.server.queue[i].value
                 });
             }
@@ -74,6 +80,23 @@ export class Playlist {
         } catch (err) {
             console.log('Save Playlist => ', err);
         }
+    }
+
+    private async addToPlaylist() {
+        const dbCollection = collection(db, `ServerPlaylist/${this.message.guildId}/Playlist/${this.args[2]}/Song`);
+        const dbDocs = await getDocs(dbCollection);
+        let type = await playDl.validate(this.args[1]);
+        if (type && dbDocs.size > 0) {
+            let info = await playDl.video_basic_info(this.args[1]);
+            await setDoc(doc(dbCollection, (dbDocs.size + 1).toString()), {
+                name: info.video_details.title, url: info.video_details.url, value: info.video_details.channel?.name
+            })
+        } else if (this.searchSong.length > 0) {
+            await setDoc(doc(dbCollection, (dbDocs.size + 1).toString()), {
+                name: this.searchSong[Number(this.args[1])].name, url: this.searchSong[Number(this.args[1])].url, value: this.searchSong[Number(this.args[1])].value
+            })
+        }
+        this.message.channel.send(`Success Add Into ${this.args[2]} Playlist`)
     }
 
     private async getServerPlaylist() {

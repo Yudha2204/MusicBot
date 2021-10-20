@@ -1,9 +1,9 @@
 
 
-import { Client, Intents, Message, MessageEmbed } from "discord.js";
+import { Client, Intents, Message } from "discord.js";
 import dotenv from 'dotenv';
 
-import { MusicStatus, Song } from "./interface/song";
+import { Song } from "./interface/song";
 import { Play } from "./commands/play";
 import { Server } from "./interface/server";
 import { Skip } from "./commands/skip";
@@ -103,8 +103,14 @@ botClient.on('messageCreate', async (msg : Message) => {
             msg.member?.send(`Your id is ${msg.member.id}`);
             break;
 
+        case 'serverid':
+            if (msg.member?.permissions.has('ADMINISTRATOR')) {
+                msg.channel.send(`Server Id : ${msg.guildId}`);
+            }
+            break;
+
         case 'playlist' : 
-            const playlist = new Playlist(msg, server, args)
+            const playlist = new Playlist(msg, server, args, searchSong)
             await playlist.execute();
             break;
 
@@ -128,7 +134,9 @@ botClient.on('messageCreate', async (msg : Message) => {
  setInterval(() => {
     servers.forEach((value, key) => {
         if ((new Date().getTime() - value.timeStamp.getTime() >= 150000 && value.status === 'inactive')) {
-            value.status = 'inactive';
+            value.player?.stop();
+            value.channel?.destroy(true);
+            servers.delete(key);
         }
     })
 }, 120000) //2 Minutes
