@@ -16,8 +16,7 @@ export class AddQueue {
             this.message.channel.send('Please Add Second Argument');
         } else if (Number(u)) {
             let song = songs.filter(x => x.index === Number(u)).map(x => {
-                x.name = `${x.index}. ${x.name.slice(3)}`;
-                return x;
+                return { ...x, index: this.queue.length, value: `${x.name.slice(3)}` };
             })
             this.queue.push(...song);
             this.message.channel.send('New Queue Added');
@@ -26,7 +25,7 @@ export class AddQueue {
             if (type) {
                 let info = await playDl.video_basic_info(u);
                 this.queue.push({
-                    index: this.queue.length + 1,
+                    index: this.queue.length,
                     name: info.video_details.title ?? '',
                     value: info.video_details.channel?.name ?? '',
                     url: u,

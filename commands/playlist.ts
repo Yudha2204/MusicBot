@@ -41,12 +41,14 @@ export class Playlist {
 
     private async play() {
         try {
+            if (this.server.playlistName === this.args[1]) return;
+            this.server.playlistName = this.args[1];
             const dbColection = collection(db, `ServerPlaylist/${this.message.guildId}/Playlist/${this.args[1]}/Song`);
             const dbDocs = await getDocs(dbColection);
             for (let i = 0; i < dbDocs.docs.length; i++) {
                 this.server.queue.push(
                     {
-                        index: Number(dbDocs.docs[i].id),
+                        index: Number(dbDocs.docs[i].id) - 1,
                         name: dbDocs.docs[i].data().name,
                         value: dbDocs.docs[i].data().value,
                         url: dbDocs.docs[i].data().url,

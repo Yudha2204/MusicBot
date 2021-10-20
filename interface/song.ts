@@ -10,5 +10,6 @@ export enum MusicStatus {
     Playing = 'Now Playing',
     Skipped = 'Skipped',
     Done = 'Sudah Diputar',
-    Unplayed = 'Unplayed'
+    Unplayed = 'Unplayed',
+    Next = 'Next'
 }

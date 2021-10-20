@@ -38,6 +38,7 @@ export class Play {
             this.server.player.play(audioResource);
             this.server.channel.subscribe(this.server.player);
             filterQueue[0].status = MusicStatus.Playing;
+            filterQueue[1].status = MusicStatus.Next;
             this.server.player.on(AudioPlayerStatus.Idle, async () => {
                 filterQueue[0].status = MusicStatus.Done;
                 await this.execute();

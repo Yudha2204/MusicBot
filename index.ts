@@ -42,7 +42,7 @@ botClient.on('messageCreate', async (msg : Message) => {
     if (!msg.content.startsWith(prefix)) return;
     
     if (!servers.has(msg.guildId)) {
-        servers.set(msg.guildId, new Server(msg.guild?.name))
+        servers.set(msg.guildId, new Server())
     }
     
     let server = servers.get(msg.guildId) as Server;

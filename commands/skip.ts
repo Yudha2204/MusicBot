@@ -18,7 +18,7 @@ export class Skip {
             if (skip > filterQueue.length) {
                 this.message.channel.send('Cannot Skip, The Number Is Bigger Than Queue Left');
             } else {
-                for (let i = 0; i < skip; i++) {
+                for (let i = 0; i < skip - 1; i++) {
                     filterQueue[i].status = MusicStatus.Skipped;
                 }
                 this.message.channel.send(`Skipping ${skip} Song`);

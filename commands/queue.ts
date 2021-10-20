@@ -20,15 +20,14 @@ export class Queue {
 
     private getQueueList(){
         let filter = this.queue.map(x => {
-            x.value + ` ${x.status}`
-            return x;
+            return { ...x, name: `${x.index + 1}. ${x.name.slice(3)}`, value: `${x.value} (${x.status})` }
         })
         if (filter.length > 0) {
             this.channel.send({
                 embeds: [
                     new MessageEmbed()
                         .setColor('#fffff')
-                        .setTitle('Unplayed Queue List')
+                        .setTitle('Queue')
                         .addFields(...filter)
                 ]
             });
