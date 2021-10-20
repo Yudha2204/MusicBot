@@ -85,15 +85,15 @@ export class Playlist {
     private async addToPlaylist() {
         const dbCollection = collection(db, `ServerPlaylist/${this.message.guildId}/Playlist/${this.args[2]}/Song`);
         const dbDocs = await getDocs(dbCollection);
-        let type = await playDl.validate(this.args[1]);
-        if (type && dbDocs.size > 0) {
+        let type = await playDl.validate(this.args[1]).catch(err => console.log(err));
+        if (this.searchSong.length > 0 && Number(this.args[1])) {
+            await setDoc(doc(dbCollection, (dbDocs.size + 1).toString()), {
+                name: this.searchSong[Number(this.args[1])].name, url: this.searchSong[Number(this.args[1])].url, value: this.searchSong[Number(this.args[1])].value
+            })
+        } else if (type && dbDocs.size > 0) {
             let info = await playDl.video_basic_info(this.args[1]);
             await setDoc(doc(dbCollection, (dbDocs.size + 1).toString()), {
                 name: info.video_details.title, url: info.video_details.url, value: info.video_details.channel?.name
-            })
-        } else if (this.searchSong.length > 0) {
-            await setDoc(doc(dbCollection, (dbDocs.size + 1).toString()), {
-                name: this.searchSong[Number(this.args[1])].name, url: this.searchSong[Number(this.args[1])].url, value: this.searchSong[Number(this.args[1])].value
             })
         }
         this.message.channel.send(`Success Add Into ${this.args[2]} Playlist`)
