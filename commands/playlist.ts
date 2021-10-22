@@ -48,7 +48,7 @@ export class Playlist {
             for (let i = 0; i < dbDocs.docs.length; i++) {
                 this.server.queue.push(
                     {
-                        index: Number(dbDocs.docs[i].id) - 1,
+                        index: this.server.queue.length + 1,
                         name: dbDocs.docs[i].data().name,
                         value: dbDocs.docs[i].data().value,
                         url: dbDocs.docs[i].data().url,

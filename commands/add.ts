@@ -36,12 +36,12 @@ export class AddQueue {
                 this.message.channel.send('Link Not Valid, Link Supported (Youtube, Spotify, and SoundCloud)');
             }
         }
-        this.fixIndexQueue();
+        // this.fixIndexQueue();
     }
 
-    private fixIndexQueue() {
-        for (let i = 0; i < this.queue.length; i++) {
-            this.queue[i].index = i;
-        }
-    }
+    // private fixIndexQueue() {
+    //     for (let i = 0; i < this.queue.length; i++) {
+    //         this.queue[i].index = i;
+    //     }
+    // }
 }

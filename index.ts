@@ -38,6 +38,11 @@ botClient.once('ready', () => {
     console.log('Bot Is Ready');
 });
 
+botClient.on('channelUpdate', (guild) =>{
+})
+
+botClient.destroy()
+
 botClient.on('messageCreate', async (msg : Message) => {
     if (!msg.content.startsWith(prefix)) return;
     
@@ -60,7 +65,7 @@ botClient.on('messageCreate', async (msg : Message) => {
         case 'play' : 
             if (args[0]) {
                 let add = new AddQueue(msg, server.queue);
-                await add.execute(searchSong, args[0])
+                await add.execute(searchSong, args[0]);
             } 
             let play = new Play(msg, server);
             await play.execute();
@@ -119,7 +124,7 @@ botClient.on('messageCreate', async (msg : Message) => {
             break;
         
         case 'exit':
-            msg.channel.send('Thanks, I will take a rest :love_letter:')
+            msg.channel.send('Thanks, I will take a rest :love_letter:');
             server.player?.stop();
             server.channel?.destroy(true);
             servers.delete(msg.guildId);
