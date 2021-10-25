@@ -26,7 +26,7 @@ export class Play {
             });
         }
         
-        let filterQueue: Song[] = this.server.queue.filter((x: Song) => x.status === MusicStatus.Unplayed);
+        let filterQueue: Song[] = this.server.queue.filter((x: Song) => x.status === MusicStatus.Unplayed || x.status === MusicStatus.Next);
         
         if (filterQueue.length > 0) {
             this.server.status = 'active';
@@ -42,7 +42,6 @@ export class Play {
             this.server.player.on(AudioPlayerStatus.Idle, async () => {
                 filterQueue[0].status = MusicStatus.Done;
                 await this.execute();
-                return;
             })
             this.message.channel.send(`Now Playing ${filterQueue[0].name} :musical_note:`);
         } else {
