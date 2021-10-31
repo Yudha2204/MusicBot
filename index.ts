@@ -11,7 +11,7 @@ import { Search } from "./commands/search";
 import { AddQueue } from "./commands/add";
 import { Playlist } from "./commands/playlist";
 import { Queue } from "./commands/queue";
-import { sendCommandInfo, sendToMember } from "./commands/bot";
+import { sendCommandInfo, sendNews, sendToMember } from "./commands/bot";
 
 let prefix : string = '-'; 
 
@@ -37,11 +37,6 @@ const servers = new Map<string | null, Server>();
 botClient.once('ready', () => {
     console.log('Bot Is Ready');
 });
-
-botClient.on('channelUpdate', (guild) =>{
-})
-
-botClient.destroy()
 
 botClient.on('messageCreate', async (msg : Message) => {
     if (!msg.content.startsWith(prefix)) return;
@@ -119,10 +114,18 @@ botClient.on('messageCreate', async (msg : Message) => {
             await playlist.execute();
             break;
 
+        case 'loop':
+            server.loop = true;
+            break;
+
         case 'servers' : 
             sendToMember(msg, servers.size);
             break;
         
+        case 'news':
+            sendNews(msg);
+            break;
+
         case 'exit':
             msg.channel.send('Thanks, I will take a rest :love_letter:');
             server.player?.stop();

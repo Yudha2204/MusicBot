@@ -46,8 +46,15 @@ export class Play {
             })
             this.message.channel.send(`Now Playing ${filterQueue[0].name} :musical_note:`);
         } else {
-            this.message.channel.send(`Queue Is Empty, I Will Leave Voice Channel If Theres No Activity, :hand_splayed:`);
-            this.server.status = 'inactive';
+            if (this.server.loop) {
+                for (let i = 0; i < this.server.queue.length; i++) {
+                    this.server.queue[i].status = MusicStatus.Unplayed;
+                }
+                await this.execute();
+            } else {
+                this.message.channel.send(`Queue Is Empty, I Will Leave Voice Channel If Theres No Activity, :hand_splayed:`);
+                this.server.status = 'inactive';
+            }
         }   
         this.server.timeStamp = new Date();
     }

@@ -57,6 +57,10 @@ export function sendCommandInfo(message : Message){
                     inline: true
                 },
                 {
+                    name: 'Loop',
+                    value: 'Looping Current Queue',
+                },
+                {
                     name: 'Add (Url Or Number)',
                     value: 'Add Song Into Queue'
                 },
@@ -81,4 +85,22 @@ export function sendToMember(msg: Message, count : number) {
                 .setTimestamp(new Date())
         ]
     });
+}
+
+export function sendNews(message: Message) {
+    let pic = 'https://lh3.googleusercontent.com/ogw/ADea4I4RMxkL1oEULYQ_hq46GyYA-NK3y8pRkHoMtpqv=s83-c-mo';
+    message.channel.send({
+        embeds: [
+            new MessageEmbed()
+                .setColor("#04eded")
+                .setTitle('News Update')
+                .setThumbnail(pic)
+                .addFields(
+                    {
+                        name: 'Version 0.1.9',
+                        value: 'Add Looping Queue'
+                    })
+                .setFooter('Prefix (-) Thanks For Using This Bot', pic)
+        ]
+    })
 }

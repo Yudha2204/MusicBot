@@ -8,5 +8,5 @@ export class Server {
     status : 'active' | 'inactive' = 'active';
     playlistName: string = "None";
     timeStamp: Date = new Date();
-
+    loop: boolean = false;
 }
