@@ -6,10 +6,7 @@ export class Server {
     channel : VoiceConnection | null = null;
     player : AudioPlayer | null = null;
     status : 'active' | 'inactive' = 'active';
-    serverName : string | undefined; 
+    playlistName: string = "None";
     timeStamp: Date = new Date();
-
-    constructor (name? : string) {
-        this.serverName = name;
-    }
+    loop: boolean = false;
 }

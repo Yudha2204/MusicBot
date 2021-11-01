@@ -16,17 +16,16 @@ export class AddQueue {
             this.message.channel.send('Please Add Second Argument');
         } else if (Number(u)) {
             let song = songs.filter(x => x.index === Number(u)).map(x => {
-                x.name = `${x.index}. ${x.name.slice(3)}`;
-                return x;
+                return { ...x, index: this.queue.length, value: `${x.name.slice(3)}` };
             })
             this.queue.push(...song);
             this.message.channel.send('New Queue Added');
         } else {
-            let type = await playDl.validate(u);
+            let type = await playDl.validate(u).catch(err => console.log(err));
             if (type) {
                 let info = await playDl.video_basic_info(u);
                 this.queue.push({
-                    index: this.queue.length + 1,
+                    index: this.queue.length,
                     name: info.video_details.title ?? '',
                     value: info.video_details.channel?.name ?? '',
                     url: u,
@@ -37,12 +36,12 @@ export class AddQueue {
                 this.message.channel.send('Link Not Valid, Link Supported (Youtube, Spotify, and SoundCloud)');
             }
         }
-        this.fixIndexQueue();
+        // this.fixIndexQueue();
     }
 
-    private fixIndexQueue() {
-        for (let i = 0; i < this.queue.length; i++) {
-            this.queue[i].index = i;
-        }
-    }
+    // private fixIndexQueue() {
+    //     for (let i = 0; i < this.queue.length; i++) {
+    //         this.queue[i].index = i;
+    //     }
+    // }
 }

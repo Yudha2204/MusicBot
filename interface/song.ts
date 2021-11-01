@@ -9,6 +9,7 @@ export interface Song{
 export enum MusicStatus {
     Playing = 'Now Playing',
     Skipped = 'Skipped',
-    Done = 'Sudah Diputar',
-    Unplayed = 'Unplayed'
+    Done = 'Played',
+    Unplayed = 'Unplayed',
+    Next = 'Next'
 }
