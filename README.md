@@ -1,8 +1,10 @@
 # MusicBot
 
 Ask me for BOT TOKEN Or you can use your own BOT TOKEN
+
 Check how to get your token here
-[link here]: https://discord.com/developers/docs
+
+[here link](https://discord.com/developers/docs)
 
 CREATE a file name .env
 then paste your token to that file 
