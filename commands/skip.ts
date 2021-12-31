@@ -14,14 +14,14 @@ export class Skip {
 
     async execute(skip: number = 1) {
         if (skip) {
-            let filterQueue: Song[] = this.server.queue.filter((x: Song) => x.status === MusicStatus.Unplayed);
-            if (skip > filterQueue.length) {
+            let nowPlaying = this.server.queue.findIndex((x: Song) => x.status === MusicStatus.Next);
+
+            if (skip > this.server.queue.length) {
                 this.message.channel.send('Cannot Skip, The Number Is Bigger Than Queue Left');
             } else {
                 for (let i = 0; i < skip - 1; i++) {
-                    filterQueue[i].status = MusicStatus.Skipped;
+                    this.server.queue[nowPlaying + i].status = MusicStatus.Skipped;
                 }
-                this.server.queue = filterQueue;
                 this.message.channel.send(`Skipping ${skip} Song`);
                 let play = new Play(this.message, this.server);
                 await play.execute();
