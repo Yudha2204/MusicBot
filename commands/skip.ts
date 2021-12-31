@@ -21,6 +21,9 @@ export class Skip {
             } else {
                 for (let i = 0; i < skip - 1; i++) {
                     this.server.queue[nowPlaying + i].status = MusicStatus.Skipped;
+                    if (i == skip) {
+                        this.server.queue[nowPlaying + i + 1].status = MusicStatus.Next;
+                    }
                 }
                 this.message.channel.send(`Skipping ${skip} Song`);
                 let play = new Play(this.message, this.server);

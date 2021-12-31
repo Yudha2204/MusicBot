@@ -66,9 +66,9 @@ export function sendCommandInfo(message: Message) {
                     },
                     {
                         name: 'Exit',
-                        value: 'Please Use This, If You No Longer Listen To A Music With This Bot'
+                        value: 'Force Exit Bot From Voice Channel'
                     })
-                .setFooter('Prefix (-) Thanks For Using This Bot', pic)
+                .setFooter('Prefix (-)', pic)
         ]
     })
 }
@@ -100,7 +100,7 @@ export function sendNews(message: Message) {
                         name: 'Bot Version 0.2.3',
                         value: 'Fix Bug Skip Command'
                     })
-                .setFooter('Prefix (-) Thanks For Using This Bot', pic)
+                .setFooter('Prefix (-)', pic)
         ]
     })
 }
