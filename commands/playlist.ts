@@ -44,6 +44,7 @@ export class Playlist {
     private async play() {
         try {
             if (this.server.playlistName === this.args[1]) return;
+            this.server.queue = [];
             this.server.playlistName = this.args[1];
             const dbColection = collection(db, `ServerPlaylist/${this.message.guildId}/Playlist/${this.args[1]}/Song`);
             const dbDocs = await getDocs(dbColection);

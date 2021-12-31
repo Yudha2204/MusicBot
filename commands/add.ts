@@ -11,25 +11,25 @@ export class AddQueue {
         this.queue = queue;
     }
 
-    async execute(songs: Song[], u?: string | null) {
+    async execute(songs: Song[], url?: string | null) {
         try {
-            if (!u) {
+            if (!url) {
                 this.message.channel.send('Please Add Second Argument');
-            } else if (Number(u)) {
-                let song = songs.filter(x => x.index === Number(u)).map(x => {
+            } else if (Number(url)) {
+                let song = songs.filter(x => x.index === Number(url)).map(x => {
                     return { ...x, index: this.queue.length, value: `${x.name.slice(3)}` };
                 })
                 this.queue.push(...song);
                 this.message.channel.send('New Queue Added');
             } else {
-                let type = await playDl.validate(u).catch(err => console.log(err));
+                let type = await playDl.validate(url).catch(err => console.log(err));
                 if (type) {
-                    let info = await playDl.video_basic_info(u);
+                    let info = await playDl.video_basic_info(url);
                     this.queue.push({
-                        index: this.queue.length,
-                        name: info.video_details.title ?? '',
+                        index: this.queue.length + 1,
+                        name: this.queue.length + 1 + '. ' + info.video_details.title ?? '',
                         value: info.video_details.channel?.name ?? '',
-                        url: u,
+                        url: url,
                         status: MusicStatus.Unplayed
                     });
                     this.message.channel.send('New Queue Added');

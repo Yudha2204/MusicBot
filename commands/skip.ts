@@ -24,6 +24,7 @@ export class Skip {
                         this.server.queue[nowPlaying + i].status = MusicStatus.Skipped;
                         if (i == skip) {
                             this.server.queue[nowPlaying + i + 1].status = MusicStatus.Next;
+                            //In play command will automaticly change music status from next to playing
                         }
                     }
                     this.message.channel.send(`Skipping ${skip} Song`);

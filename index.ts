@@ -13,7 +13,7 @@ import { Playlist } from "./commands/playlist";
 import { Queue } from "./commands/queue";
 import { sendCommandInfo, sendNews, sendToMember } from "./commands/bot";
 
-let prefix: string = '-';
+let prefix: string = 'v';
 
 dotenv.config();
 
