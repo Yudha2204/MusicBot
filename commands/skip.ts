@@ -4,7 +4,7 @@ import { MusicStatus, Song } from "../interface/song";
 import { Play } from "./play";
 
 export class Skip {
-    private message : Message;
+    private message: Message;
     private server: Server;
 
     constructor(message: Message, server: Server) {
@@ -21,6 +21,7 @@ export class Skip {
                 for (let i = 0; i < skip - 1; i++) {
                     filterQueue[i].status = MusicStatus.Skipped;
                 }
+                this.server.queue = filterQueue;
                 this.message.channel.send(`Skipping ${skip} Song`);
                 let play = new Play(this.message, this.server);
                 await play.execute();
