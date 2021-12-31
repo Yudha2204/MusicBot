@@ -34,6 +34,10 @@ export function sendCommandInfo(message: Message) {
                         value: 'Save Queue To Server Playlist'
                     },
                     {
+                        name: 'Playlist Remove PlaylistName',
+                        value: 'Remove Playlist From Server Playlist'
+                    },
+                    {
                         name: 'Play | (Number / Url) (Optional)',
                         value: 'Play A Music If There a Queue, Or Add Song Then Play It'
                     },
@@ -97,8 +101,8 @@ export function sendNews(message: Message) {
                 .setThumbnail(pic)
                 .addFields(
                     {
-                        name: 'Bot Version 0.2.3',
-                        value: 'Fix Bug Skip Command'
+                        name: 'Bot Version 0.2.5',
+                        value: 'Add Feature Delete Playlist, See more info with -info command'
                     })
                 .setFooter('Prefix (-)', pic)
         ]

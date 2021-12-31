@@ -1,5 +1,5 @@
 import { MusicStatus, Song } from "../interface/song";
-import { getFirestore, getDocs, collection, doc, setDoc } from 'firebase/firestore/lite'
+import { getFirestore, getDocs, collection, doc, setDoc, deleteDoc } from 'firebase/firestore/lite'
 import { initializeApp } from 'firebase/app';
 
 import * as playDl from 'play-dl';
@@ -13,9 +13,9 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 export class Playlist {
-    private message : Message
-    private server : Server;
-    private args : string[];
+    private message: Message
+    private server: Server;
+    private args: string[];
     private searchSong: Song[];
 
     constructor(message: Message, server: Server, args: string[], searchSong: Song[]) {
@@ -25,19 +25,21 @@ export class Playlist {
         this.searchSong = searchSong;
     }
 
-    async execute(){
-        if (this.args[0] === 'play' && this.args[1]){
+    async execute() {
+        if (this.args[0] === 'play' && this.args[1]) {
             await this.play();
-        } else if (this.args[0] === 'save' && this.args[1]){
+        } else if (this.args[0] === 'save' && this.args[1]) {
             await this.savePlaylist();
         } else if (this.args[0] === 'add' && this.args[1] && this.args[2]) {
             await this.addToPlaylist();
-        } else if (this.args[0]){
+        } else if (this.args[0] === 'remove' && this.args[1]) {
+            await this.removePlaylist();
+        } else if (this.args[0]) {
             await this.showPlaylistSong();
         } else {
             await this.getServerPlaylist();
         }
-    } 
+    }
 
     private async play() {
         try {
@@ -49,7 +51,7 @@ export class Playlist {
                 this.server.queue.push(
                     {
                         index: this.server.queue.length + 1,
-                        name: dbDocs.docs[i].data().name,
+                        name: this.server.queue.length + 1 + '. ' + dbDocs.docs[i].data().name,
                         value: dbDocs.docs[i].data().value,
                         url: dbDocs.docs[i].data().url,
                         status: MusicStatus.Unplayed
@@ -64,7 +66,7 @@ export class Playlist {
         }
     }
 
-    private async savePlaylist(){
+    private async savePlaylist() {
         try {
             this.message.channel.send('Saving Playlist, Please Wait :orange_circle:');
             const headCollection = collection(db, `ServerPlaylist`);
@@ -81,6 +83,22 @@ export class Playlist {
             this.message.channel.send(`Success Add Into Playlist :green_circle:`);
         } catch (err) {
             console.log('Save Playlist => ', err);
+        }
+    }
+
+
+
+    private async removePlaylist() {
+        try {
+            const docRef = doc(db, `ServerPlaylist/${this.message.guildId}/Playlist/${this.args[1]}`)
+            if (docRef.id != 'undefined') {
+                await deleteDoc(docRef);
+                this.message.channel.send(`Playlist ${this.args[1]} Deleted`)
+            } else {
+                this.message.channel.send('Playlist Not Found')
+            }
+        } catch (err) {
+            console.log('Error when remove playist', err)
         }
     }
 
@@ -108,13 +126,13 @@ export class Playlist {
             const dbDocs = await getDocs(dbColection);
             const playlist = dbDocs.docs.map(x => x.id);
             const embedMessage: EmbedFieldData[] = [];
-    
+
             for (let i = 0; i < playlist.length; i++) {
                 const dbColection = collection(db, `ServerPlaylist/${this.message.guildId}/Playlist/${playlist[i]}/Song`);
                 const dbDocs = await getDocs(dbColection);
-                embedMessage.push({ name: `${i+1}. ${playlist[i]}`, value: dbDocs.size + ' Song' });
+                embedMessage.push({ name: `${i + 1}. ${playlist[i]}`, value: dbDocs.size + ' Song' });
             }
-    
+
             this.message.channel.send({
                 embeds: [
                     new MessageEmbed()
@@ -135,21 +153,21 @@ export class Playlist {
             const docs = dbDoc.docs.sort((a, b) => Number(a.id) - Number(b.id));
             for (let i = 0; i < docs.length; i++) {
                 embedMessage.push(
-                    { name : docs[i].id + '. ' + docs[i].data().name, value : docs[i].data().value }
+                    { name: docs[i].id + '. ' + docs[i].data().name, value: docs[i].data().value }
                 )
             }
             if (embedMessage.length > 0) {
                 this.message.channel.send({
-                    embeds : [ 
+                    embeds: [
                         new MessageEmbed()
-                        .setTitle('Playlist ' + this.args[0])
-                        .addFields(...embedMessage)
+                            .setTitle('Playlist ' + this.args[0])
+                            .addFields(...embedMessage)
                     ]
                 })
             } else {
                 this.message.channel.send('Playlist Not Found, *Playlist name is case sensitive')
             }
-            
+
         } catch (err) {
             console.log('Show Playlist =>', err);
         }
