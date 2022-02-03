@@ -13,7 +13,7 @@ import { Playlist } from "./commands/playlist";
 import { Queue } from "./commands/queue";
 import { sendCommandInfo, sendNews, sendToMember } from "./commands/bot";
 
-let prefix: string = 'v';
+let prefix: string = '-';
 
 dotenv.config();
 
@@ -115,11 +115,12 @@ botClient.on('messageCreate', async (msg: Message) => {
             break;
 
         case 'loop':
-            server.loop = true;
+            server.loop = !server.loop;
+            msg.channel.send(server.loop ? 'loop this queue' : 'disable loop');
             break;
 
         case 'servers':
-            sendToMember(msg, servers.size);
+            sendToMember(msg, servers);
             break;
 
         case 'version':

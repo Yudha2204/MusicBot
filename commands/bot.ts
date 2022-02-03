@@ -1,4 +1,5 @@
-import { Message, MessageEmbed } from "discord.js";
+import { EmbedFieldData, Message, MessageEmbed } from "discord.js";
+import { Server } from "../interface/server";
 
 export function sendCommandInfo(message: Message) {
     let pic = 'https://lh3.googleusercontent.com/ogw/ADea4I4RMxkL1oEULYQ_hq46GyYA-NK3y8pRkHoMtpqv=s83-c-mo';
@@ -78,14 +79,16 @@ export function sendCommandInfo(message: Message) {
 }
 
 
-export function sendToMember(msg: Message, count: number) {
+export function sendToMember(msg: Message, server : Map<string | null, Server>) {
+    let field : EmbedFieldData[] = []; 
+    server.forEach((value, key) => {
+        field.push({name : `Server Id : ${key}`, value : `Expired : ${value.timeStamp.getTime()}` })
+    });
     msg.member?.send({
         embeds: [
             new MessageEmbed()
                 .setTitle('Server That Using This Bot')
-                .addFields(
-                    { name: 'Servers Active', value: count.toString() }
-                )
+                .addFields(field)
                 .setTimestamp(new Date())
         ]
     });
