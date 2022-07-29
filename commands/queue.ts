@@ -1,16 +1,16 @@
-import { MessageEmbed, TextBasedChannels } from "discord.js";
+import { MessageEmbed, TextBasedChannel } from "discord.js";
 import { MusicStatus, Song } from "../interface/song";
 
 export class Queue {
-    private channel : TextBasedChannels;
-    private queue : Song[];
+    private channel: TextBasedChannel;
+    private queue: Song[];
 
-    constructor (channel : TextBasedChannels, queue : Song[]){
+    constructor(channel: TextBasedChannel, queue: Song[]) {
         this.channel = channel;
         this.queue = queue;
     }
 
-    async execute(secondCommand? : string){
+    async execute(secondCommand?: string) {
         if (secondCommand === 'reset') {
             this.resetQueue();
         } else {
@@ -18,7 +18,7 @@ export class Queue {
         }
     }
 
-    private getQueueList(){
+    private getQueueList() {
         let filter = this.queue.map(x => {
             return { ...x, name: `${x.index + 1}. ${x.name.slice(3)}`, value: `${x.value} (${x.status})` }
         })
