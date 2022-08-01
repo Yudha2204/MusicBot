@@ -21,7 +21,7 @@ export class AddQueue {
             this.queue.push(...song);
             this.message.channel.send('New Queue Added');
         } else {
-            let type = await playDl.validate(u).catch(err => console.log(err));
+            let type = await playDl.validate(u).catch(err => this.message.channel.send('Link Not Valid, Link Supported (Youtube, Spotify, and SoundCloud)'));
             if (type) {
                 let info = await playDl.video_basic_info(u);
                 this.queue.push({
@@ -31,17 +31,10 @@ export class AddQueue {
                     url: u,
                     status: MusicStatus.Unplayed
                 });
-            this.message.channel.send('New Queue Added');
+                this.message.channel.send('New Queue Added');
             } else {
                 this.message.channel.send('Link Not Valid, Link Supported (Youtube, Spotify, and SoundCloud)');
             }
         }
-        // this.fixIndexQueue();
     }
-
-    // private fixIndexQueue() {
-    //     for (let i = 0; i < this.queue.length; i++) {
-    //         this.queue[i].index = i;
-    //     }
-    // }
 }
