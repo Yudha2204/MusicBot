@@ -1,11 +1,11 @@
-import { MessageEmbed, TextBasedChannels } from "discord.js";
+import { MessageEmbed, TextBasedChannel } from "discord.js";
 import { MusicStatus, Song } from "../interface/song";
 
 export class Queue {
-    private channel: TextBasedChannels;
+    private channel: TextBasedChannel;
     private queue: Song[];
 
-    constructor(channel: TextBasedChannels, queue: Song[]) {
+    constructor(channel: TextBasedChannel, queue: Song[]) {
         this.channel = channel;
         this.queue = queue;
     }
