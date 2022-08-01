@@ -67,7 +67,7 @@ export class Play {
             }
             this.server.timeStamp = new Date();
         } catch (error) {
-            this.message.channel.send(`error`);
+            this.message.channel.send(JSON.stringify(error));
         }
     }
 
