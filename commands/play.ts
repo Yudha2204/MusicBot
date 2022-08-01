@@ -30,7 +30,7 @@ export class Play {
             if (this.server.player) {
                 this.server.player?.unpause();
                 this.server.paused = false;
-                this.server?.channel?.subscribe(this.server.player);
+                return this.server?.channel?.subscribe(this.server.player);
             }
         }
 
