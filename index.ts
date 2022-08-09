@@ -13,6 +13,7 @@ import { Playlist } from "./commands/playlist";
 import { Queue } from "./commands/queue";
 import { sendCommandInfo, sendNews, sendToMember } from "./commands/bot";
 import { Remove } from "./commands/remove";
+import { Controls } from "./commands/controls";
 
 let prefix: string = '-';
 
@@ -99,7 +100,14 @@ botClient.on('messageCreate', async (msg: Message) => {
             let add = new AddQueue(msg, server.queue);
             await add.execute(searchSong, args[0])
             break;
-
+        case 'prev':
+            let control1 = new Controls(msg, server);
+            await control1.prev();
+            break;
+        case 'next':
+            let control2 = new Controls(msg, server);
+            await control2.next();
+            break;
         case 'queue':
             const queue = new Queue(msg.channel, server.queue);
             queue.execute(args[0]);
