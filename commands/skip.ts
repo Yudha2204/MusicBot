@@ -19,13 +19,14 @@ export class Skip {
             if (skip > queueLeft) {
                 this.message.channel.send('Cannot Skip, The Number Is Bigger Than Queue Left');
             } else {
+                let tempSkip = skip;
                 while (skip != 0) {
                     this.server.queue[index].status = MusicStatus.Skipped;
                     skip--
                     index++
 
                     if (skip == 0) {
-                        this.message.channel.send(`Skipping ${skip} Song`);
+                        this.message.channel.send(`Skipping ${tempSkip} Song`);
                         let play = new Play(this.message, this.server);
                         await play.execute();
                     }
