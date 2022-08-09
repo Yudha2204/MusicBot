@@ -69,6 +69,14 @@ export function sendCommandInfo(message: Message) {
                         value: 'Add Song Into Queue'
                     },
                     {
+                        name: 'Next',
+                        value: 'Skip to the next song',
+                    },
+                    {
+                        name: 'Prev',
+                        value: 'Play previous song'
+                    },
+                    {
                         name: 'Exit',
                         value: 'Please Use This, If You No Longer Listen To A Music With This Bot'
                     })
@@ -101,8 +109,8 @@ export function sendNews(message: Message) {
                 .setThumbnail(pic)
                 .addFields(
                     {
-                        name: 'Version 0.8.9',
-                        value: 'Fix skip and remove command causing bot crash'
+                        name: 'Version 0.9.2',
+                        value: 'Add prev and next command'
                     })
                 .setFooter('Prefix (-) Thanks For Using This Bot', pic)
         ]
