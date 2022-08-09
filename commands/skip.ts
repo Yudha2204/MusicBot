@@ -14,17 +14,23 @@ export class Skip {
 
     async execute(skip: number = 1) {
         if (skip) {
-            let filterQueue: Song[] = this.server.queue.filter((x: Song) => x.status === MusicStatus.Unplayed);
-
-            if (skip > filterQueue.length) {
+            let index = this.server.queue.findIndex(x => x.status == MusicStatus.Next)
+            let queueLeft = this.server.queue.filter(x => x.status == MusicStatus.Next || x.status == MusicStatus.Unplayed).length
+            if (skip > queueLeft) {
                 this.message.channel.send('Cannot Skip, The Number Is Bigger Than Queue Left');
             } else {
-                for (let i = 0; i < skip - 1; i++) {
-                    this.server.queue.filter(x => x.index == filterQueue[i].index - 1)[0].status = MusicStatus.Skipped;
+                while (skip != 0) {
+                    this.server.queue[index].status = MusicStatus.Skipped;
+                    skip--
+                    index++
+
+                    if (skip == 0) {
+                        this.message.channel.send(`Skipping ${skip} Song`);
+                        let play = new Play(this.message, this.server);
+                        await play.execute();
+                    }
                 }
-                this.message.channel.send(`Skipping ${skip} Song`);
-                let play = new Play(this.message, this.server);
-                await play.execute();
+
             }
         }
     }
