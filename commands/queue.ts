@@ -20,7 +20,7 @@ export class Queue {
 
     private getQueueList() {
         let filter = this.queue.map(x => {
-            return { ...x, name: `${x.index + 1}. ${x.name}`, value: `${x.value} (${x.status})` }
+            return { ...x, name: `${x.index + 1}. ${x.name.slice(3)}`, value: `${x.value} (${x.status})` }
         })
         if (filter.length > 0) {
             this.channel.send({
