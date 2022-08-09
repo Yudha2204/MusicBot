@@ -14,7 +14,7 @@ export class Skip {
 
     async execute(skip: number = 1) {
         if (skip) {
-            let index = this.server.queue.findIndex(x => x.status == MusicStatus.Next)
+            let index = this.server.queue.findIndex(x => x.status == MusicStatus.Next || x.status == MusicStatus.Unplayed)
             let queueLeft = this.server.queue.filter(x => x.status == MusicStatus.Next || x.status == MusicStatus.Unplayed).length
             if (skip > queueLeft) {
                 this.message.channel.send('Cannot Skip, The Number Is Bigger Than Queue Left');
