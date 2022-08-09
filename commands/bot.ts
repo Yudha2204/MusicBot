@@ -101,8 +101,8 @@ export function sendNews(message: Message) {
                 .setThumbnail(pic)
                 .addFields(
                     {
-                        name: 'Version 0.8.1',
-                        value: 'Add Remove Queue'
+                        name: 'Version 0.8.9',
+                        value: 'Fix skip and remove command causing bot crash'
                     })
                 .setFooter('Prefix (-) Thanks For Using This Bot', pic)
         ]
