@@ -63,16 +63,20 @@ botClient.on('messageCreate', async (msg: Message) => {
         collector?.on('end', async (collection: MessageComponentInteraction) => {
             switch (collection.customId) {
                 case 'btn_prev':
-                    msg.channel.send('-prev');
+                    collection.reply('-prev');
+                    collection.deleteReply()
                     break;
                 case 'btn_next':
-                    msg.channel.send('-next');
+                    collection.reply('-next');
+                    collection.deleteReply()
                     break;
                 case 'btn_pause':
-                    msg.channel.send('-pause');
+                    collection.reply('-pause');
+                    collection.deleteReply()
                     break;
                 case 'btn_resume':
-                    msg.channel.send('-resume');
+                    collection.reply('-resume');
+                    collection.deleteReply()
                     break;
             }
         })
