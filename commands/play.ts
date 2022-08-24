@@ -1,6 +1,6 @@
 import { AudioPlayerStatus, createAudioPlayer, createAudioResource, DiscordGatewayAdapterCreator, joinVoiceChannel } from "@discordjs/voice";
 import * as playDl from 'play-dl';
-import { Message } from "discord.js";
+import { EmbedFieldData, Message, MessageEmbed, MessageActionRow, MessageButton, ButtonInteraction } from "discord.js";
 import { MusicStatus, Song } from "../interface/song";
 import { Server } from "../interface/server";
 
@@ -53,7 +53,68 @@ export class Play {
                     filterQueue[0].status = MusicStatus.Done;
                     await this.execute();
                 })
-                this.message.channel.send(`Now Playing ${filterQueue[0].name} :musical_note:`);
+
+                let embedField: EmbedFieldData[] = [
+                    { name: filterQueue[0].name, value: 'Playing' }
+                ]
+
+                if (filterQueue[0].index - 1 != 0) {
+                    embedField.push(
+                        { name: this.server.queue[filterQueue[0].index - 2].name, value: 'Prev', inline: true }
+                    )
+                }
+
+                if (filterQueue[0].index + 1 != this.server.queue.length) {
+                    embedField.push(
+                        { name: this.server.queue[filterQueue[0].index].name, value: 'Next', inline: true }
+                    )
+
+                }
+                const row = new MessageActionRow()
+                    .addComponents([new MessageButton()
+                        .setCustomId('btn_prev')
+                        .setLabel('Previous')
+                        .setStyle('PRIMARY'),
+                    new MessageButton()
+                        .setCustomId('btn_pause')
+                        .setLabel('Pause')
+                        .setStyle('PRIMARY'),
+                    new MessageButton()
+                        .setCustomId('btn_resume')
+                        .setLabel('Resume')
+                        .setStyle('PRIMARY'),
+                    new MessageButton()
+                        .setCustomId('btn_next')
+                        .setLabel('Next')
+                        .setStyle('PRIMARY')]);
+
+                if (!this.server.messageId && this.server.channelControl) {
+                    const sent = await this.server.channelControl.send({
+                        embeds: [
+                            new MessageEmbed()
+                                .setTitle('Current Playing')
+                                .addFields(embedField)
+                        ],
+                        components: [row]
+                    })
+                    this.server.messageId = sent.id;
+                } else {
+                    this.message.channel.send(`Now Playing ${filterQueue[0].name}`)
+                }
+
+                if (this.server.messageId && this.server.channelControl) {
+
+                    this.server.channelControl.messages.fetch(this.server.messageId).then((msg) => {
+                        msg.edit({
+                            embeds: [
+                                new MessageEmbed()
+                                    .setTitle('Current Playing')
+                                    .addFields(embedField)
+                            ],
+                            components: [row]
+                        })
+                    })
+                }
             } else {
                 if (this.server.loop) {
                     for (let i = 0; i < this.server.queue.length; i++) {

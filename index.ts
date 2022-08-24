@@ -1,6 +1,6 @@
 
 
-import { Client, Intents, Message } from "discord.js";
+import { ButtonInteraction, Client, Intents, Message, MessageComponentInteraction, TextChannel } from "discord.js";
 import dotenv from 'dotenv';
 
 import { Song } from "./interface/song";
@@ -16,7 +16,7 @@ import { Remove } from "./commands/remove";
 import { Controls } from "./commands/controls";
 
 let prefix: string = '-';
-
+let channelControl: TextChannel;
 dotenv.config();
 
 
@@ -36,11 +36,12 @@ let searchSong: Song[] = [];
  */
 const servers = new Map<string | null, Server>();
 
-botClient.once('ready', () => {
+botClient.once('ready', async (client) => {
     console.log('Bot Is Ready');
 });
 
 botClient.on('messageCreate', async (msg: Message) => {
+    channelControl = await botClient.channels.cache.find((x: any) => x.name === 'musik-control') as TextChannel
     if (!msg.content.startsWith(prefix)) return;
 
     if (!servers.has(msg.guildId)) {
@@ -51,9 +52,31 @@ botClient.on('messageCreate', async (msg: Message) => {
 
     const args = msg?.content?.slice(prefix.length).split(/ +/);
     const command = args?.shift()?.toLowerCase();
-
+    server.channelControl = channelControl;
     //Update server timeStamp, to make sure this server still active or not
     server.timeStamp = new Date();
+
+    if (server.channelControl) {
+        const collector = server.channelControl.createMessageComponentCollector({
+            time: 10000 * 15
+        });
+        collector?.on('end', async (collection: MessageComponentInteraction) => {
+            switch (collection.customId) {
+                case 'btn_prev':
+                    msg.channel.send('-prev');
+                    break;
+                case 'btn_next':
+                    msg.channel.send('-next');
+                    break;
+                case 'btn_pause':
+                    msg.channel.send('-pause');
+                    break;
+                case 'btn_resume':
+                    msg.channel.send('-resume');
+                    break;
+            }
+        })
+    }
     switch (command) {
         case 'info':
             sendCommandInfo(msg);
@@ -148,25 +171,37 @@ botClient.on('messageCreate', async (msg: Message) => {
 
         case 'exit':
             msg.channel.send('Thanks, I will take a rest :love_letter:');
+            if (server.messageId && server.channelControl) {
+                server.channelControl.messages.fetch(server.messageId).then(x => {
+                    x.delete()
+                })
+            }
             server.player?.stop();
             server.channel?.destroy(true);
             servers.delete(msg.guildId);
             break;
     }
+    msg.delete();
+
+    /**
+     * This Interval Check If The Server Has AudioPlayer Or Not, If Not Then It Will Change Status Of That Server To Inactive
+     * And If The Status Already Inactive It Will Delete The Server To Prevent Memory Leak
+     */
+    setInterval(() => {
+        servers.forEach(async (value, key) => {
+            if ((new Date().getTime() - value.timeStamp.getTime() >= 150000 && value.status === 'inactive')) {
+                if (value.messageId && value.channelControl) {
+                    value.channelControl.messages.fetch(value.messageId).then(x => {
+                        x.delete()
+                    })
+                }
+                value.player?.stop();
+                value.channel?.destroy(true);
+                servers.delete(key);
+            }
+        })
+    }, 120000) //2 Minutes
 })
 
-/**
- * This Interval Check If The Server Has AudioPlayer Or Not, If Not Then It Will Change Status Of That Server To Inactive
- * And If The Status Already Inactive It Will Delete The Server To Prevent Memory Leak
- */
-setInterval(() => {
-    servers.forEach((value, key) => {
-        if ((new Date().getTime() - value.timeStamp.getTime() >= 150000 && value.status === 'inactive')) {
-            value.player?.stop();
-            value.channel?.destroy(true);
-            servers.delete(key);
-        }
-    })
-}, 120000) //2 Minutes
 
 botClient.login(process.env.TOKEN);
