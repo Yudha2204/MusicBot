@@ -64,22 +64,23 @@ botClient.on('messageCreate', async (msg: Message) => {
             switch (collection.customId) {
                 case 'btn_prev':
                     collection.reply('-prev');
-                    collection.deleteReply()
                     break;
                 case 'btn_next':
                     collection.reply('-next');
-                    collection.deleteReply()
                     break;
                 case 'btn_pause':
                     collection.reply('-pause');
-                    collection.deleteReply()
                     break;
                 case 'btn_resume':
                     collection.reply('-resume');
-                    collection.deleteReply()
                     break;
             }
         })
+
+        collector?.on('end', async (collection: MessageComponentInteraction) => {
+            collection.deleteReply()
+        })
+
     }
     switch (command) {
         case 'info':
