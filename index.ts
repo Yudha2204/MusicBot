@@ -60,7 +60,7 @@ botClient.on('messageCreate', async (msg: Message) => {
         const collector = server.channelControl.createMessageComponentCollector({
             time: 10000 * 15
         });
-        collector?.on('end', async (collection: MessageComponentInteraction) => {
+        collector?.on('collect', async (collection: MessageComponentInteraction) => {
             switch (collection.customId) {
                 case 'btn_prev':
                     collection.reply('-prev');
