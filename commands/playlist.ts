@@ -48,14 +48,14 @@ export class Playlist {
             for (let i = 0; i < dbDocs.docs.length; i++) {
                 this.server.queue.push(
                     {
-                        index: this.server.queue.length + 1,
+                        index: Number(dbDocs.docs[i].id),
                         name: dbDocs.docs[i].data().name,
                         value: dbDocs.docs[i].data().value,
                         url: dbDocs.docs[i].data().url,
                         status: MusicStatus.Unplayed
                     });
             }
-            this.server.queue = this.server.queue.sort((a, b) => a.name.localeCompare(b.name));
+            this.server.queue = this.server.queue.sort((a, b) => a.index - b.index);
 
             let playCommand = new Play(this.message, this.server);
             await playCommand.execute();
