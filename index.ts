@@ -56,32 +56,6 @@ botClient.on('messageCreate', async (msg: Message) => {
     //Update server timeStamp, to make sure this server still active or not
     server.timeStamp = new Date();
 
-    if (server.channelControl) {
-        const collector = server.channelControl.createMessageComponentCollector({
-            time: 10000 * 15
-        });
-        collector?.on('collect', async (collection: MessageComponentInteraction) => {
-            switch (collection.customId) {
-                case 'btn_prev':
-                    collection.reply('-prev');
-                    break;
-                case 'btn_next':
-                    collection.reply('-next');
-                    break;
-                case 'btn_pause':
-                    collection.reply('-pause');
-                    break;
-                case 'btn_resume':
-                    collection.reply('-resume');
-                    break;
-            }
-        })
-
-        collector?.on('end', async (collection: MessageComponentInteraction) => {
-            collection.deleteReply()
-        })
-
-    }
     switch (command) {
         case 'info':
             sendCommandInfo(msg);

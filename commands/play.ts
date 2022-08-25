@@ -70,23 +70,6 @@ export class Play {
                     )
 
                 }
-                const row = new MessageActionRow()
-                    .addComponents([new MessageButton()
-                        .setCustomId('btn_prev')
-                        .setLabel('Previous')
-                        .setStyle('PRIMARY'),
-                    new MessageButton()
-                        .setCustomId('btn_pause')
-                        .setLabel('Pause')
-                        .setStyle('PRIMARY'),
-                    new MessageButton()
-                        .setCustomId('btn_resume')
-                        .setLabel('Resume')
-                        .setStyle('PRIMARY'),
-                    new MessageButton()
-                        .setCustomId('btn_next')
-                        .setLabel('Next')
-                        .setStyle('PRIMARY')]);
 
                 if (!this.server.messageId && this.server.channelControl) {
                     const sent = await this.server.channelControl.send({
@@ -94,8 +77,7 @@ export class Play {
                             new MessageEmbed()
                                 .setTitle('Current Playing')
                                 .addFields(embedField)
-                        ],
-                        components: [row]
+                        ]
                     })
                     this.server.messageId = sent.id;
                 } else {
@@ -111,7 +93,6 @@ export class Play {
                                     .setTitle('Current Playing')
                                     .addFields(embedField)
                             ],
-                            components: [row]
                         })
                     })
                 }
