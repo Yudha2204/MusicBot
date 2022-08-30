@@ -1,9 +1,8 @@
-export interface Song{
-    index : number;
-    name : string;
-    value : string;
-    url : string;
-    status : MusicStatus;
+export interface Song {
+    name: string;
+    value: string;
+    url: string;
+    status: MusicStatus;
 }
 
 export enum MusicStatus {

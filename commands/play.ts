@@ -65,7 +65,7 @@ export class Play {
                     }
                     await this.execute();
                 } else {
-                    this.message.channel.send({ embeds: [new MessageEmbed().setTitle(`No tracks have been playing for the past 3 minutes, im leaving :wave:`)] });
+                    this.message.channel.send({ embeds: [new MessageEmbed().setTitle(`Im Leaving In 2 Minutes, If No Activity :wave:`)] });
                     this.server.status = 'inactive';
                 }
             }

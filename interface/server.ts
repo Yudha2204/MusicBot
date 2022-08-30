@@ -1,5 +1,4 @@
 import { AudioPlayer, VoiceConnection } from "@discordjs/voice";
-import { TextChannel } from "discord.js";
 import { Song } from "./song";
 
 export class Server {

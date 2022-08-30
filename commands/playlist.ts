@@ -48,14 +48,12 @@ export class Playlist {
             for (let i = 0; i < dbDocs.docs.length; i++) {
                 this.server.queue.push(
                     {
-                        index: Number(dbDocs.docs[i].id),
                         name: dbDocs.docs[i].data().name,
                         value: dbDocs.docs[i].data().value,
                         url: dbDocs.docs[i].data().url,
                         status: MusicStatus.Unplayed
                     });
             }
-            this.server.queue = this.server.queue.sort((a, b) => a.index - b.index);
 
             let playCommand = new Play(this.message, this.server);
             await playCommand.execute();
@@ -75,7 +73,7 @@ export class Playlist {
             for (let i = 0; i < this.server.queue.length; i++) {
                 const dbDocs = await getDocs(songCollection);
                 await setDoc(doc(songCollection, (dbDocs.size + 1).toString()), {
-                    name: this.server.queue[i].name, url: this.server.queue[i].url, value: this.server.queue[i].value
+                    name: this.server.queue[i].name.slice(3), url: this.server.queue[i].url, value: this.server.queue[i].value
                 });
             }
             this.message.channel.send(`Success Add Into Playlist :green_circle:`);

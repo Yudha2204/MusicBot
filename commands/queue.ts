@@ -19,8 +19,8 @@ export class Queue {
     }
 
     private getQueueList() {
-        let filter = this.queue.map(x => {
-            return { ...x, name: `${x.index + 1}. ${x.name.slice(3)}`, value: `${x.value} (${x.status})` }
+        let filter = this.queue.map((x, i) => {
+            return { ...x, name: `${i + 1}. ${x.name.slice(3)}`, value: `${x.value} (${x.status})` }
         })
         if (filter.length > 0) {
             this.channel.send({
@@ -37,9 +37,7 @@ export class Queue {
     }
 
     private resetQueue() {
-        for (let i = 0; i < this.queue.length; i++) {
-            this.queue[i].status = MusicStatus.Unplayed;
-        }
-        this.channel.send('Queue Reset, Type -Play To Play Queue');
+        this.queue = [];
+        this.channel.send({ embeds: [new MessageEmbed().setTitle('Queue Has Been Reset')] })
     }
 }

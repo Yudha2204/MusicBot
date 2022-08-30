@@ -57,6 +57,11 @@ export function sendCommandInfo(message: Message) {
                         inline: true
                     },
                     {
+                        name: 'Queue Reset',
+                        value: 'Show Unplayed Song Only',
+                        inline: true
+                    },
+                    {
                         name: 'Loop',
                         value: 'Looping Current Queue',
                     },
@@ -78,7 +83,7 @@ export function sendCommandInfo(message: Message) {
                     },
                     {
                         name: 'Exit',
-                        value: 'Please Use This, If You No Longer Listen To A Music With This Bot'
+                        value: 'Disconnect bot from channel'
                     })
                 .setFooter('Prefix (-)', pic)
         ]

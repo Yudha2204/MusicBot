@@ -60,7 +60,7 @@ botClient.on('messageCreate', async (msg: Message) => {
 
         case 'play':
             if (args[0]) {
-                let add = new AddQueue(msg, server.queue);
+                let add = new AddQueue(msg, server.queue, server);
                 await add.execute(searchSong, args[0]);
             }
             let play = new Play(msg, server);
@@ -96,7 +96,7 @@ botClient.on('messageCreate', async (msg: Message) => {
             break;
 
         case 'add':
-            let add = new AddQueue(msg, server.queue);
+            let add = new AddQueue(msg, server.queue, server);
             await add.execute(searchSong, args[0])
             break;
         case 'prev':
@@ -143,6 +143,11 @@ botClient.on('messageCreate', async (msg: Message) => {
         case 'remove':
             const remove = new Remove(msg, server);
             remove.execute(Number(args[0]))
+            break;
+
+        case 'shuffle':
+            const shuffle = new Controls(msg, server);
+            shuffle.shuffle()
             break;
 
         case 'exit':

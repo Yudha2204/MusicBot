@@ -1,4 +1,4 @@
-import { Message } from "discord.js";
+import { Message, MessageEmbed } from "discord.js";
 import * as playDl from 'play-dl';
 import { Server } from "../interface/server";
 import { MusicStatus } from "../interface/song";
@@ -38,5 +38,24 @@ export class Controls {
         } else {
             this.message.channel.send('Cant Go Forward')
         }
+    }
+
+    shuffle() {
+        let currentIndex = this.server.queue.length, randomIndex;
+
+        // While there remain elements to shuffle.
+        while (currentIndex != 0) {
+
+            // Pick a remaining element.
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+            // And swap it with the current element.
+            [this.server.queue[currentIndex], this.server.queue[randomIndex]] = [
+                this.server.queue[randomIndex], this.server.queue[currentIndex]
+            ];
+        }
+
+        this.message.channel.send({ embeds: [new MessageEmbed().setTitle('Queue Has Been Shuffle')] })
+
     }
 }
