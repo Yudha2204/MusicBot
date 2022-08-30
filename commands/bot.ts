@@ -80,7 +80,7 @@ export function sendCommandInfo(message: Message) {
                         name: 'Exit',
                         value: 'Please Use This, If You No Longer Listen To A Music With This Bot'
                     })
-                .setFooter('Prefix (-) Thanks For Using This Bot', pic)
+                .setFooter('Prefix (-)', pic)
         ]
     })
 }
@@ -109,10 +109,10 @@ export function sendNews(message: Message) {
                 .setThumbnail(pic)
                 .addFields(
                     {
-                        name: 'Version 0.9.2',
-                        value: 'Add prev and next command'
+                        name: 'Version 0.9.3',
+                        value: 'Change bot reply to an embed'
                     })
-                .setFooter('Prefix (-) Thanks For Using This Bot', pic)
+                .setFooter('Prefix (-)', pic)
         ]
     })
 }

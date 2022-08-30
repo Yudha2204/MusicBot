@@ -11,6 +11,4 @@ export class Server {
     timeStamp: Date = new Date();
     loop: boolean = false;
     paused: boolean = false;
-    messageId: string | undefined = undefined;
-    channelControl: TextChannel | undefined = undefined;
 }

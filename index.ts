@@ -1,6 +1,6 @@
 
 
-import { ButtonInteraction, Client, Intents, Message, MessageComponentInteraction, TextChannel } from "discord.js";
+import { ButtonInteraction, Client, Intents, Message, MessageComponentInteraction, MessageEmbed, TextChannel } from "discord.js";
 import dotenv from 'dotenv';
 
 import { Song } from "./interface/song";
@@ -16,7 +16,6 @@ import { Remove } from "./commands/remove";
 import { Controls } from "./commands/controls";
 
 let prefix: string = '-';
-let channelControl: TextChannel;
 dotenv.config();
 
 
@@ -41,7 +40,6 @@ botClient.once('ready', async (client) => {
 });
 
 botClient.on('messageCreate', async (msg: Message) => {
-    channelControl = await botClient.channels.cache.find((x: any) => x.name === 'musik-control') as TextChannel
     if (!msg.content.startsWith(prefix)) return;
 
     if (!servers.has(msg.guildId)) {
@@ -52,7 +50,6 @@ botClient.on('messageCreate', async (msg: Message) => {
 
     const args = msg?.content?.slice(prefix.length).split(/ +/);
     const command = args?.shift()?.toLowerCase();
-    server.channelControl = channelControl;
     //Update server timeStamp, to make sure this server still active or not
     server.timeStamp = new Date();
 
@@ -132,7 +129,7 @@ botClient.on('messageCreate', async (msg: Message) => {
 
         case 'loop':
             server.loop = !server.loop;
-            msg.channel.send(server.loop ? `Loop Enable` : 'Loop Disabled');
+            msg.channel.send({ embeds: [new MessageEmbed().setTitle(server.loop ? `Loop Enable` : 'Loop Disabled')] });
             break;
 
         case 'servers':
@@ -149,12 +146,7 @@ botClient.on('messageCreate', async (msg: Message) => {
             break;
 
         case 'exit':
-            msg.channel.send('Thanks, I will take a rest :love_letter:');
-            if (server.messageId && server.channelControl) {
-                server.channelControl.messages.fetch(server.messageId).then(x => {
-                    x.delete()
-                })
-            }
+            msg.channel.send('Im Leaving :sus:');
             server.player?.stop();
             server.channel?.destroy(true);
             servers.delete(msg.guildId);
@@ -169,11 +161,6 @@ botClient.on('messageCreate', async (msg: Message) => {
     setInterval(() => {
         servers.forEach(async (value, key) => {
             if ((new Date().getTime() - value.timeStamp.getTime() >= 150000 && value.status === 'inactive')) {
-                if (value.messageId && value.channelControl) {
-                    value.channelControl.messages.fetch(value.messageId).then(x => {
-                        x.delete()
-                    })
-                }
                 value.player?.stop();
                 value.channel?.destroy(true);
                 servers.delete(key);

@@ -16,7 +16,7 @@ export class Play {
     async execute() {
         try {
             if (!this.message.member?.voice?.channel) {
-                this.message.channel.send('You Need To Join Voice Channel :microphone:')
+                this.message.channel.send({ embeds: [new MessageEmbed().setTitle('You Need To Join Voice Channel :microphone:')] })
                 return;
             } else {
                 const adapter = this.message?.guild?.voiceAdapterCreator as DiscordGatewayAdapterCreator;
@@ -47,6 +47,9 @@ export class Play {
                 this.server.player.play(audioResource);
                 this.server.channel.subscribe(this.server.player);
                 filterQueue[0].status = MusicStatus.Playing;
+
+                this.message.channel.send({ embeds: [new MessageEmbed().setTitle(`Now Playing ${filterQueue[0].name}`)] });
+
                 if (filterQueue.length > 1)
                     filterQueue[1].status = MusicStatus.Next;
                 this.server.player.on(AudioPlayerStatus.Idle, async () => {
@@ -54,48 +57,7 @@ export class Play {
                     await this.execute();
                 })
 
-                let embedField: EmbedFieldData[] = [
-                    { name: filterQueue[0].name, value: 'Playing' }
-                ]
 
-                if (filterQueue[0].index - 1 != 0) {
-                    embedField.push(
-                        { name: this.server.queue[filterQueue[0].index - 2].name, value: 'Prev', inline: true }
-                    )
-                }
-
-                if (filterQueue[0].index + 1 != this.server.queue.length) {
-                    embedField.push(
-                        { name: this.server.queue[filterQueue[0].index].name, value: 'Next', inline: true }
-                    )
-
-                }
-
-                if (!this.server.messageId && this.server.channelControl) {
-                    const sent = await this.server.channelControl.send({
-                        embeds: [
-                            new MessageEmbed()
-                                .setTitle('Current Playing')
-                                .addFields(embedField)
-                        ]
-                    })
-                    this.server.messageId = sent.id;
-                } else {
-                    this.message.channel.send(`Now Playing ${filterQueue[0].name}`)
-                }
-
-                if (this.server.messageId && this.server.channelControl) {
-
-                    this.server.channelControl.messages.fetch(this.server.messageId).then((msg) => {
-                        msg.edit({
-                            embeds: [
-                                new MessageEmbed()
-                                    .setTitle('Current Playing')
-                                    .addFields(embedField)
-                            ],
-                        })
-                    })
-                }
             } else {
                 if (this.server.loop) {
                     for (let i = 0; i < this.server.queue.length; i++) {
@@ -103,13 +65,13 @@ export class Play {
                     }
                     await this.execute();
                 } else {
-                    this.message.channel.send(`Queue Is Empty, I Will Leave Voice Channel If Theres No Activity, :hand_splayed:`);
+                    this.message.channel.send({ embeds: [new MessageEmbed().setTitle(`No tracks have been playing for the past 3 minutes, im leaving :wave:`)] });
                     this.server.status = 'inactive';
                 }
             }
             this.server.timeStamp = new Date();
         } catch (error) {
-            this.message.channel.send('Something went error ' + error);
+            this.message.channel.send({ embeds: [new MessageEmbed().setColor('RED').setTitle('Something went error ' + error)] });
         }
     }
 
