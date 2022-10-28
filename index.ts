@@ -1,6 +1,6 @@
 
 
-import { ButtonInteraction, Client, Intents, Message, MessageComponentInteraction, MessageEmbed, TextChannel } from "discord.js";
+import { Client, Intents, Message, MessageEmbed } from "discord.js";
 import dotenv from 'dotenv';
 
 import { Song } from "./interface/song";
@@ -150,6 +150,16 @@ botClient.on('messageCreate', async (msg: Message) => {
             shuffle.shuffle()
             break;
 
+        case 'show-data':
+            console.log('Active', servers.size)
+
+            servers.forEach((value, key) => {
+                console.log(key, value)
+            })
+
+            console.log('search song', searchSong)
+            break;
+
         case 'exit':
             msg.channel.send('Im Leaving :sus:');
             server.player?.stop();
@@ -157,7 +167,6 @@ botClient.on('messageCreate', async (msg: Message) => {
             servers.delete(msg.guildId);
             break;
     }
-    msg.delete();
 
     /**
      * This Interval Check If The Server Has AudioPlayer Or Not, If Not Then It Will Change Status Of That Server To Inactive
