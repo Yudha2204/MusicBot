@@ -11,7 +11,7 @@ import { Search } from "./commands/search";
 import { AddQueue } from "./commands/add";
 import { Playlist } from "./commands/playlist";
 import { Queue } from "./commands/queue";
-import { sendCommandInfo, sendNews, sendToMember } from "./commands/bot";
+import { sendCommandInfo, sendNews, sendInfo } from "./commands/bot";
 import { Remove } from "./commands/remove";
 import { Controls } from "./commands/controls";
 
@@ -26,9 +26,6 @@ const botClient = new Client({
         Intents.FLAGS.GUILD_VOICE_STATES,
     ]
 });
-
-let searchSong: Song[] = [];
-
 /**
  * servers Contains a bunch of server list
  * @example [string = { queue : [], player : AudioPlayer, channel : VoiceConnection }]
@@ -61,7 +58,7 @@ botClient.on('messageCreate', async (msg: Message) => {
         case 'play':
             if (args[0]) {
                 let add = new AddQueue(msg, server.queue, server);
-                await add.execute(searchSong, args[0]);
+                await add.execute(server.searchSong, args[0]);
             }
             let play = new Play(msg, server);
             await play.execute();
@@ -90,14 +87,14 @@ botClient.on('messageCreate', async (msg: Message) => {
             break;
 
         case 'search':
-            searchSong = []
-            let search = new Search(msg, searchSong);
+            server.searchSong = []
+            let search = new Search(msg, server.searchSong);
             await search.execute(args.join(' '));
             break;
 
         case 'add':
             let add = new AddQueue(msg, server.queue, server);
-            await add.execute(searchSong, args[0])
+            await add.execute(server.searchSong, args[0])
             break;
         case 'prev':
             let control1 = new Controls(msg, server);
@@ -123,7 +120,7 @@ botClient.on('messageCreate', async (msg: Message) => {
             break;
 
         case 'playlist':
-            const playlist = new Playlist(msg, server, args, searchSong)
+            const playlist = new Playlist(msg, server, args, server.searchSong)
             await playlist.execute();
             break;
 
@@ -133,7 +130,7 @@ botClient.on('messageCreate', async (msg: Message) => {
             break;
 
         case 'servers':
-            sendToMember(msg, servers.size);
+            sendInfo(msg, servers);
             break;
 
         case 'news':
@@ -150,14 +147,19 @@ botClient.on('messageCreate', async (msg: Message) => {
             shuffle.shuffle()
             break;
 
-        case 'show-data':
-            console.log('Active', servers.size)
+        case 'memory':
+            const formatMemoryUsage = (data) => `${Math.round(data / 1024 / 1024 * 100) / 100} MB`;
 
-            servers.forEach((value, key) => {
-                console.log(key, value)
-            })
+            const memoryData = process.memoryUsage();
 
-            console.log('search song', searchSong)
+            const memoryUsage = {
+                rss: `${formatMemoryUsage(memoryData.rss)} -> Resident Set Size - total memory allocated for the process execution`,
+                heapTotal: `${formatMemoryUsage(memoryData.heapTotal)} -> total size of the allocated heap`,
+                heapUsed: `${formatMemoryUsage(memoryData.heapUsed)} -> actual memory used during the execution`,
+                external: `${formatMemoryUsage(memoryData.external)} -> V8 external memory`,
+            };
+
+            msg.channel.send({ embeds: [new MessageEmbed().setTitle('Memory Usage On This Bot').addFields({ name: 'rss', value: memoryUsage.rss }, { name: 'heapTotal', value: memoryUsage.heapTotal }, { name: 'heapUsed', value: memoryUsage.heapUsed }, { name: 'external', value: memoryUsage.external })] })
             break;
 
         case 'exit':
@@ -174,6 +176,12 @@ botClient.on('messageCreate', async (msg: Message) => {
      */
     setInterval(() => {
         servers.forEach(async (value, key) => {
+            if ((new Date().getTime() - value.timeStamp.getTime() >= 150000 && value.status === 'inactive')) {
+                value.player?.stop();
+                value.channel?.destroy(true);
+                servers.delete(key);
+            }
+
             if ((new Date().getTime() - value.timeStamp.getTime() >= 150000 && value.status === 'inactive')) {
                 value.player?.stop();
                 value.channel?.destroy(true);

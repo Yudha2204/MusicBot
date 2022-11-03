@@ -3,6 +3,7 @@ import { Song } from "./song";
 
 export class Server {
     queue: Song[] = [];
+    searchSong: Song[] = [];
     channel: VoiceConnection | null = null;
     player: AudioPlayer | null = null;
     status: 'active' | 'inactive' = 'active';

@@ -15,13 +15,15 @@ export class Play {
 
     async execute() {
         try {
-            if (!this.message.member?.voice?.channel) {
+            if (!this.message.member?.voice?.channel && !this.server.channel) {
                 this.message.channel.send({ embeds: [new MessageEmbed().setTitle('You Need To Join Voice Channel :microphone:')] })
+                this.server.status = 'inactive';
+                this.server.timeStamp = new Date();
                 return;
             } else {
                 const adapter = this.message?.guild?.voiceAdapterCreator as DiscordGatewayAdapterCreator;
                 this.server.channel = joinVoiceChannel({
-                    channelId: this.message.member.voice.channelId ?? '',
+                    channelId: this.message.member?.voice.channelId ?? '',
                     guildId: this.message.guildId ?? '',
                     adapterCreator: adapter
                 });
@@ -31,7 +33,8 @@ export class Play {
                 if (this.server.player) {
                     this.server.player?.unpause();
                     this.server.paused = false;
-                    return this.server?.channel?.subscribe(this.server.player);
+                    this.server?.channel?.subscribe(this.server.player);
+                    return
                 }
             }
 

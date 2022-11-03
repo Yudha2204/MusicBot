@@ -1,4 +1,5 @@
 import { Message, MessageEmbed } from "discord.js";
+import { Server } from "../interface/server";
 
 export function sendCommandInfo(message: Message) {
     let pic = 'https://lh3.googleusercontent.com/ogw/ADea4I4RMxkL1oEULYQ_hq46GyYA-NK3y8pRkHoMtpqv=s83-c-mo';
@@ -91,13 +92,17 @@ export function sendCommandInfo(message: Message) {
 }
 
 
-export function sendToMember(msg: Message, count: number) {
-    msg.member?.send({
+export function sendInfo(msg: Message, server: Map<string | null, Server>) {
+    msg.channel.send({
         embeds: [
             new MessageEmbed()
                 .setTitle('Server That Using This Bot')
                 .addFields(
-                    { name: 'Servers Active', value: count.toString() }
+                    { name: 'Servers Active', value: server.size.toString() },
+                    { name: 'Current Voice Channel', value: JSON.stringify(server.get(msg.guildId)?.channel) },
+                    { name: 'Current Player', value: JSON.stringify(server.get(msg.guildId)?.player) },
+                    { name: 'Current Queue Size', value: `${server.get(msg.guildId)?.queue.length}` },
+                    { name: 'Current Search Song Size', value: `${server.get(msg.guildId)?.searchSong.length}` }
                 )
                 .setTimestamp(new Date())
         ]
@@ -114,8 +119,8 @@ export function sendNews(message: Message) {
                 .setThumbnail(pic)
                 .addFields(
                     {
-                        name: 'Version 0.9.3',
-                        value: 'Change bot reply to an embed'
+                        name: 'Version 0.9.4',
+                        value: 'allow 24/7 play with loop command'
                     })
                 .setFooter('Prefix (-)', pic)
         ]
