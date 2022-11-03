@@ -176,16 +176,18 @@ botClient.on('messageCreate', async (msg: Message) => {
      */
     setInterval(() => {
         servers.forEach(async (value, key) => {
-            if ((new Date().getTime() - value.timeStamp.getTime() >= 150000 && value.status === 'inactive')) {
+            let date = new Date()
+            if ((date.getTime() - value.timeStamp.getTime() >= 150000 && value.status === 'inactive')) {
                 value.player?.stop();
                 value.channel?.destroy(true);
                 servers.delete(key);
             }
 
-            if ((new Date().getTime() - value.timeStamp.getTime() >= 150000 && value.status === 'inactive')) {
-                value.player?.stop();
-                value.channel?.destroy(true);
-                servers.delete(key);
+            if (date.getTime() - value.timeStamp.getTime() >= 150000) {
+                if (!value.loop) {
+                    value.status === 'inactive'
+                    value.timeStamp = date
+                }
             }
         })
     }, 120000) //2 Minutes
