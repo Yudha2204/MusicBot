@@ -1,4 +1,5 @@
 export interface Song {
+    no: number;
     name: string;
     value: string;
     url: string;
@@ -8,7 +9,7 @@ export interface Song {
 export enum MusicStatus {
     Playing = 'Now Playing',
     Skipped = 'Skipped',
-    Done = 'Played',
+    Played = 'Played',
     Unplayed = 'Unplayed',
     Next = 'Next'
 }

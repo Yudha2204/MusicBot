@@ -1,4 +1,6 @@
 FROM node:16.11.1
+
+ARG TOKEN=
  
 WORKDIR /app
  
@@ -9,4 +11,4 @@ RUN npm install
  
 COPY . .
  
-CMD [ "ts-node", "index.ts" ]
+CMD [ "node", "./dist/index.js" ]

@@ -20,6 +20,7 @@ export class Search {
             let result = await ytsearch(search);
             for (let i = 0; i < (result.videos.length < 8 ? result.videos.length : 8); i++) {
                 this.songs.push({
+                    no: this.songs.length + 1,
                     name: (i + 1) + '. ' + result.videos[i].title,
                     value: result.videos[i].author.name,
                     url: result.videos[i].url,

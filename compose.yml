@@ -3,3 +3,5 @@ services:
     nodeserver:
         build:
             context: ./app
+        environment:
+          - TOKEN=ASDADASSADA

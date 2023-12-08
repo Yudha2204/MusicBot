@@ -1,8 +1,9 @@
-import { AudioPlayerStatus, createAudioPlayer, createAudioResource, DiscordGatewayAdapterCreator, joinVoiceChannel } from "@discordjs/voice";
+import { AudioPlayer, AudioPlayerStatus, createAudioPlayer, createAudioResource, DiscordGatewayAdapterCreator, joinVoiceChannel, VoiceConnection } from "@discordjs/voice";
 import * as playDl from 'play-dl';
-import { EmbedFieldData, Message, MessageEmbed, MessageActionRow, MessageButton, ButtonInteraction } from "discord.js";
+import { Message, MessageEmbed } from "discord.js";
 import { MusicStatus, Song } from "../interface/song";
-import { Server } from "../interface/server";
+import { Server, ServerStatus } from "../interface/server";
+import { PlayerException } from "../interface/exception";
 
 export class Play {
     private message: Message;
@@ -15,12 +16,11 @@ export class Play {
 
     async execute() {
         try {
-            if (!this.message.member?.voice?.channel && !this.server.channel) {
-                this.message.channel.send({ embeds: [new MessageEmbed().setTitle('You Need To Join Voice Channel :microphone:')] })
-                this.server.status = 'inactive';
-                this.server.timeStamp = new Date();
-                return;
+            if (!this.message.member?.voice?.channel && !(this.server.channel instanceof VoiceConnection)) {
+                throw new PlayerException('You Need To Join Voice Channel :microphone:');
             } else {
+                this.server.voiceChannelId = this.message.member?.voice.channelId;
+
                 const adapter = this.message?.guild?.voiceAdapterCreator as DiscordGatewayAdapterCreator;
                 this.server.channel = joinVoiceChannel({
                     channelId: this.message.member?.voice.channelId ?? '',
@@ -29,20 +29,20 @@ export class Play {
                 });
             }
 
-            if (this.server.paused) {
-                if (this.server.player) {
-                    this.server.player?.unpause();
-                    this.server.paused = false;
-                    this.server?.channel?.subscribe(this.server.player);
-                    return
-                }
+            if (this.server.paused && this.server.player) {
+                this.server.player?.unpause();
+                this.server.paused = false;
+                this.server?.channel?.subscribe(this.server.player);
+                return;
             }
 
-            let filterQueue: Song[] = this.server.queue.filter((x: Song) => x.status === MusicStatus.Unplayed || x.status === MusicStatus.Next);
+            let filterQueue = this.server.queue.filter((x: Song) => x.status === MusicStatus.Unplayed || x.status === MusicStatus.Next);
 
             if (filterQueue.length > 0) {
-                this.server.status = 'active';
-                this.server.player = createAudioPlayer();
+
+                if (!(this.server.player instanceof AudioPlayer))
+                    this.server.player = createAudioPlayer();
+
                 const song = await playDl.stream(filterQueue[0].url);
                 const audioResource = createAudioResource(song.stream, {
                     inputType: song.type
@@ -51,12 +51,14 @@ export class Play {
                 this.server.channel.subscribe(this.server.player);
                 filterQueue[0].status = MusicStatus.Playing;
 
+                this.server.currentSong = filterQueue[0];
                 this.message.channel.send({ embeds: [new MessageEmbed().setTitle(`Now Playing ${filterQueue[0].name}`)] });
 
                 if (filterQueue.length > 1)
                     filterQueue[1].status = MusicStatus.Next;
+
                 this.server.player.on(AudioPlayerStatus.Idle, async () => {
-                    filterQueue[0].status = MusicStatus.Done;
+                    filterQueue[0].status = MusicStatus.Played;
                     await this.execute();
                 })
 
@@ -68,13 +70,21 @@ export class Play {
                     }
                     await this.execute();
                 } else {
-                    this.message.channel.send({ embeds: [new MessageEmbed().setTitle(`Im Leaving In 2 Minutes, If No Activity :wave:`)] });
-                    this.server.status = 'inactive';
+                    throw new PlayerException(`Im Leaving In 2 Minutes, If No Activity :wave:`);
                 }
             }
-            this.server.timeStamp = new Date();
-        } catch (error) {
-            this.message.channel.send({ embeds: [new MessageEmbed().setColor('RED').setTitle('Something went error ' + error)] });
+
+            this.server.serverStatus = ServerStatus.Active;
+        } catch (error: any) {
+            if (error instanceof Error) {
+                console.log(error.message)
+            }
+
+            if (error instanceof PlayerException) {
+                this.message.channel.send({ embeds: [error.toEmbed()] })
+            }
+
+            this.server.serverStatus = ServerStatus.InActive;
         }
     }
 
